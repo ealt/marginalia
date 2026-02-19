@@ -1,86 +1,79 @@
 # Marginalia
 
-Google Docs-style comments for Obsidian.
+Google Docs-style comments for [Obsidian](https://obsidian.md).
 
-Add inline comments to any document. Select text, leave a comment, and collaborate with highlights, a sidebar panel, and resolution tracking — all stored invisibly in standard markdown.
+Select text, leave a comment, and collaborate with highlights, a sidebar panel,
+and resolution tracking -- all stored invisibly in standard markdown.
 
 ## Features
 
-- Add, edit, resolve, and delete comments on selected text
-- Editor highlights for commented ranges
-- Inline comment icon widget in editor
-- Sidebar panel with jump/edit/resolve/delete actions
-- Optional best-effort reading mode highlighting
-- Robust parser validation for malformed markers
+- **Inline comments** -- add, edit, resolve, and delete comments on any selected
+  text
+- **Editor highlights** -- colored background for commented ranges with inline
+  icon widgets
+- **Sidebar panel** -- browse all comments with jump, edit, resolve, and delete
+  actions
+- **Reading mode** -- optional best-effort highlighting in reading view
+- **Configurable** -- author name, highlight colors, reading mode toggle
+- **Portable** -- comments are stored as HTML comment markers, invisible to any
+  renderer outside Obsidian
 
-## Marker format
+## How it works
 
-Comments are stored as paired markers in note source:
+Comments are stored as paired markers in the note source:
 
 ```md
 <!-- marginalia-start: a1b2c3d4 -->annotated text<!-- marginalia: {"v":1,"id":"a1b2c3d4","text":"Is this accurate?","author":"Eric","ts":1708300000,"resolved":false} -->
 ```
 
-To avoid breaking HTML comment boundaries, serialization escapes only literal `-->` sequences in payload JSON as `--\u003e`.
+Markers are standard HTML comments, so they're invisible in any markdown
+renderer that doesn't understand them. The `-->` sequence in JSON payloads is
+escaped to prevent breaking the outer comment boundary.
+
+## Installation
+
+### From Obsidian Community Plugins
+
+*Coming soon* -- search for "Marginalia" in Settings > Community plugins.
+
+### Manual
+
+1. Download `main.js`, `manifest.json`, and `styles.css` from the
+   [latest release](https://github.com/ericalt/marginalia/releases/latest)
+2. Create `.obsidian/plugins/marginalia/` in your vault
+3. Copy the three files into that directory
+4. Enable the plugin in Settings > Community plugins
 
 ## Development
 
-### Requirements
+See [CONTRIBUTING.md](CONTRIBUTING.md) for full setup and workflow details.
 
-- Node.js 22+
-- npm 10+
-
-### Setup
+### Quick start
 
 ```bash
 npm install
+npm run dev         # watch mode
+npm run build       # production bundle
+npm run check       # type-check
+npm run test        # unit tests
 ```
 
-### Commands
+### Local Obsidian testing
 
-```bash
-npm run build       # production bundle (main.js)
-npm run check       # TypeScript type-check
-npm run test        # parser unit tests
-npm run test:watch  # watch-mode tests
-```
+Build with `npm run build`, then copy `manifest.json`, `main.js`, and
+`styles.css` to your vault's `.obsidian/plugins/marginalia/` directory and
+enable the plugin.
 
-## Local Obsidian testing
+## CI/CD
 
-1. Build: `npm run build`
-2. Copy these files to your vault plugin folder at `.obsidian/plugins/marginalia/`:
-   - `manifest.json`
-   - `main.js`
-   - `styles.css`
-3. Enable the plugin in Obsidian settings.
+| Workflow | Trigger | Steps |
+|---|---|---|
+| [CI](.github/workflows/ci.yml) | Push / PR | Install, type-check, test, build |
+| [Release](.github/workflows/release.yml) | Manual dispatch | Tag, build, publish GitHub release |
 
-## GitHub Actions
-
-- `.github/workflows/ci.yml`
-  - Runs on push/PR
-  - Executes `npm ci`, `npm run check`, `npm run test`, `npm run build`
-- `.github/workflows/release.yml`
-  - Runs when pushing a `v*` tag
-  - Verifies tag version matches `manifest.json`
-  - Builds and publishes a zip release artifact containing:
-    - `manifest.json`
-    - `main.js`
-    - `styles.css`
-    - `versions.json`
-
-## Community Plugins submission checklist
-
-Before submitting to Obsidian Community Plugins:
-
-1. Ensure this repository is public on GitHub.
-2. Create a tagged release (for example `v0.1.0`) after updating:
-   - `manifest.json` version
-   - `versions.json`
-3. Verify the release includes `manifest.json`, `main.js`, and `styles.css`.
-4. Follow Obsidian submission and policy docs:
-   - https://docs.obsidian.md/Plugins/Releasing/Submit+your+plugin
-   - https://github.com/obsidianmd/obsidian-releases
+Release flow: `npm run version-bump patch` > commit > push > run workflow in
+GitHub Actions.
 
 ## License
 
-MIT
+[MIT](LICENSE)

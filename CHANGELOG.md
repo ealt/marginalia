@@ -2,6 +2,10 @@
 
 All notable changes to Marginalia are documented here.
 
+## 0.2.0
+
+- Add repository documentation: README, CONTRIBUTING, CHANGELOG, and consolidated AGENTS.md
+
 ## 0.1.1
 
 Patch release.
