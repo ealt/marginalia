@@ -1,0 +1,23 @@
+{
+  "name": "obsidian-marginalia",
+  "version": "0.1.0",
+  "description": "Add inline comments to any document. Select text, leave a comment, and collaborate with highlights, a sidebar panel, and resolution tracking — all stored invisibly in standard markdown.",
+  "main": "main.js",
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "build": "node esbuild.config.mjs production",
+    "check": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "@codemirror/state": "6.5.0",
+    "@codemirror/view": "6.38.6",
+    "@types/node": "^24.3.0",
+    "builtin-modules": "^4.0.0",
+    "esbuild": "^0.25.9",
+    "obsidian": "latest",
+    "typescript": "^5.9.2",
+    "vitest": "^2.1.8"
+  }
+}

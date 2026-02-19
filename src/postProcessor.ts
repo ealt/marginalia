@@ -1,0 +1,115 @@
+import { MarkdownPostProcessor } from "obsidian";
+import { parseComments } from "./commentParser";
+import type CommentsPlugin from "./main";
+
+interface TextNodeSpan {
+  node: Text;
+  start: number;
+  end: number;
+}
+
+interface TextSnapshot {
+  text: string;
+  spans: TextNodeSpan[];
+}
+
+export function createReadingModePostProcessor(plugin: CommentsPlugin): MarkdownPostProcessor {
+  return (el, ctx) => {
+    if (!plugin.settings.showInReadingMode) {
+      return;
+    }
+
+    const section = ctx.getSectionInfo(el);
+    if (!section?.text) {
+      return;
+    }
+
+    const comments = parseComments(section.text);
+    if (comments.length === 0) {
+      return;
+    }
+
+    let searchStart = 0;
+    for (const parsed of comments) {
+      const annotatedText = section.text.slice(parsed.annotatedFrom, parsed.annotatedTo);
+      if (!annotatedText.trim()) {
+        continue;
+      }
+
+      const snapshot = snapshotText(el);
+      const matchIndex = snapshot.text.indexOf(annotatedText, searchStart);
+      if (matchIndex < 0) {
+        continue;
+      }
+
+      wrapTextRange(
+        snapshot.spans,
+        matchIndex,
+        matchIndex + annotatedText.length,
+        parsed.comment.resolved ? "marginalia-highlight marginalia-highlight-resolved" : "marginalia-highlight"
+      );
+
+      searchStart = matchIndex + annotatedText.length;
+    }
+  };
+}
+
+function snapshotText(root: HTMLElement): TextSnapshot {
+  const spans: TextNodeSpan[] = [];
+  let fullText = "";
+
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  let current: Node | null = walker.nextNode();
+  while (current !== null) {
+    const textNode = current as Text;
+    if (textNode.nodeValue && textNode.nodeValue.length > 0) {
+      const start = fullText.length;
+      fullText += textNode.nodeValue;
+      spans.push({
+        node: textNode,
+        start,
+        end: fullText.length
+      });
+    }
+    current = walker.nextNode();
+  }
+
+  return { text: fullText, spans };
+}
+
+function wrapTextRange(spans: TextNodeSpan[], from: number, to: number, className: string): void {
+  for (const span of spans) {
+    if (span.end <= from || span.start >= to) {
+      continue;
+    }
+
+    if (!span.node.parentNode) {
+      continue;
+    }
+
+    let target = span.node;
+    const localStart = Math.max(0, from - span.start);
+    const localEnd = Math.min(span.node.data.length, to - span.start);
+    const selectedLength = localEnd - localStart;
+    if (selectedLength <= 0) {
+      continue;
+    }
+
+    if (localStart > 0) {
+      target = target.splitText(localStart);
+    }
+    if (selectedLength < target.data.length) {
+      target.splitText(selectedLength);
+    }
+
+    const parent = target.parentNode;
+    if (!parent) {
+      continue;
+    }
+
+    const wrapper = document.createElement("span");
+    wrapper.className = className;
+    parent.replaceChild(wrapper, target);
+    wrapper.appendChild(target);
+  }
+}

@@ -1,0 +1,9 @@
+node_modules
+main.js
+main.js.map
+data.json
+*.tsbuildinfo
+.DS_Store
+coverage
+dist
+*.zip
