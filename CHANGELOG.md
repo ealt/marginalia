@@ -16,6 +16,9 @@ Patch release.
 - Default new comment author to `git config user.name` when the Author name setting is blank (fallback: `Unknown`)
 - Make comment cards clickable to select and jump directly from the panel
 - Remove the redundant `Jump` button from each comment card
+- Visually emphasize the selected comment's highlighted text and inline icon in the editor
+- Reduce non-selected highlight opacity to improve contrast with the selected comment highlight
+- Fix selected-highlight sync so the emphasized editor highlight follows the newly selected comment immediately
 
 ## 0.1.0
 

@@ -11,14 +11,18 @@ interface CommentIconClickDetail {
 
 class CommentIconWidget extends WidgetType {
   private readonly comment: Comment;
+  private readonly isActive: boolean;
 
-  constructor(comment: Comment) {
+  constructor(comment: Comment, isActive: boolean) {
     super();
     this.comment = comment;
+    this.isActive = isActive;
   }
 
   eq(other: CommentIconWidget): boolean {
-    return other.comment.id === this.comment.id && other.comment.resolved === this.comment.resolved;
+    return other.comment.id === this.comment.id
+      && other.comment.resolved === this.comment.resolved
+      && other.isActive === this.isActive;
   }
 
   toDOM(view: EditorView): HTMLElement {
@@ -27,8 +31,11 @@ class CommentIconWidget extends WidgetType {
     if (this.comment.resolved) {
       iconEl.classList.add("is-resolved");
     }
+    if (this.isActive) {
+      iconEl.classList.add("is-active");
+    }
     iconEl.textContent = "C";
-    iconEl.title = this.comment.resolved ? "Comment (resolved)" : "Comment";
+    iconEl.title = this.isActive ? "Comment (selected)" : this.comment.resolved ? "Comment (resolved)" : "Comment";
     iconEl.setAttribute("role", "button");
     iconEl.setAttribute("aria-label", `Comment ${this.comment.id}`);
     iconEl.setAttribute("contenteditable", "false");
@@ -56,17 +63,22 @@ class CommentIconWidget extends WidgetType {
   }
 }
 
-function buildDecorations(docText: string): DecorationSet {
+function buildDecorations(docText: string, activeCommentId: string | null): DecorationSet {
   const comments = parseComments(docText);
   const builder = new RangeSetBuilder<Decoration>();
 
   for (const parsed of comments) {
+    const isActive = parsed.comment.id === activeCommentId;
     builder.add(parsed.startMarkerFrom, parsed.startMarkerTo, Decoration.replace({}));
 
     if (parsed.annotatedFrom < parsed.annotatedTo) {
-      const className = parsed.comment.resolved
-        ? "marginalia-highlight marginalia-highlight-resolved"
-        : "marginalia-highlight";
+      const className = [
+        "marginalia-highlight",
+        parsed.comment.resolved ? "marginalia-highlight-resolved" : "",
+        isActive ? "marginalia-highlight-active" : ""
+      ]
+        .filter((value) => value.length > 0)
+        .join(" ");
       builder.add(
         parsed.annotatedFrom,
         parsed.annotatedTo,
@@ -83,7 +95,7 @@ function buildDecorations(docText: string): DecorationSet {
       parsed.endMarkerFrom,
       parsed.endMarkerTo,
       Decoration.replace({
-        widget: new CommentIconWidget(parsed.comment)
+        widget: new CommentIconWidget(parsed.comment, isActive)
       })
     );
   }
@@ -91,16 +103,21 @@ function buildDecorations(docText: string): DecorationSet {
   return builder.finish();
 }
 
-export function createCommentsEditorExtension(onIconClick: (commentId: string) => void): Extension {
+export function createCommentsEditorExtension(
+  onIconClick: (commentId: string) => void,
+  getActiveCommentId: () => string | null
+): Extension {
   return ViewPlugin.fromClass(
     class {
       decorations: DecorationSet;
       private readonly view: EditorView;
       private readonly onIconClick: (event: Event) => void;
+      private activeCommentId: string | null;
 
       constructor(view: EditorView) {
         this.view = view;
-        this.decorations = buildDecorations(view.state.doc.toString());
+        this.activeCommentId = getActiveCommentId();
+        this.decorations = buildDecorations(view.state.doc.toString(), this.activeCommentId);
         this.onIconClick = (event: Event) => {
           const detail = (event as CustomEvent<CommentIconClickDetail>).detail;
           if (detail?.commentId) {
@@ -111,8 +128,10 @@ export function createCommentsEditorExtension(onIconClick: (commentId: string) =
       }
 
       update(update: ViewUpdate): void {
-        if (update.docChanged) {
-          this.decorations = buildDecorations(update.state.doc.toString());
+        const nextActiveCommentId = getActiveCommentId();
+        if (update.docChanged || nextActiveCommentId !== this.activeCommentId) {
+          this.activeCommentId = nextActiveCommentId;
+          this.decorations = buildDecorations(update.state.doc.toString(), this.activeCommentId);
         }
       }
 

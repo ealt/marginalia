@@ -1,12 +1,24 @@
 body {
-  --marginalia-highlight-color: rgba(244, 212, 112, 0.35);
-  --marginalia-highlight-color-resolved: rgba(121, 130, 143, 0.22);
+  --marginalia-highlight-color: rgba(244, 212, 112, 0.18);
+  --marginalia-highlight-color-resolved: rgba(121, 130, 143, 0.12);
+  --marginalia-highlight-color-active: rgba(244, 212, 112, 0.42);
+  --marginalia-highlight-color-resolved-active: rgba(121, 130, 143, 0.28);
 }
 
 .marginalia-highlight {
   background: var(--marginalia-highlight-color);
   border-bottom: 1px solid var(--text-accent);
   border-radius: 2px;
+}
+
+.marginalia-highlight-active {
+  background: var(--marginalia-highlight-color-active);
+  border-bottom-width: 2px;
+  box-shadow: inset 0 -1px 0 var(--interactive-accent);
+}
+
+.marginalia-highlight-active.marginalia-highlight-resolved {
+  background: var(--marginalia-highlight-color-resolved-active);
 }
 
 .marginalia-highlight-resolved {
@@ -38,6 +50,12 @@ body {
 
 .marginalia-icon.is-resolved {
   color: var(--text-faint);
+}
+
+.marginalia-icon.is-active {
+  border-color: var(--interactive-accent);
+  color: var(--text-accent);
+  opacity: 1;
 }
 
 .marginalia-panel-root {

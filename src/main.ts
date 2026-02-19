@@ -24,7 +24,7 @@ export default class CommentsPlugin extends Plugin {
     this.registerEditorExtension(
       createCommentsEditorExtension((commentId) => {
         void this.handleIconClick(commentId);
-      })
+      }, () => this.activeCommentId)
     );
     this.registerMarkdownPostProcessor(createReadingModePostProcessor(this));
 
@@ -115,11 +115,19 @@ export default class CommentsPlugin extends Plugin {
   updateHighlightStyles(): void {
     document.body.style.setProperty(
       "--marginalia-highlight-color",
-      this.toAlphaColor(this.settings.highlightColor, 0.35)
+      this.toAlphaColor(this.settings.highlightColor, 0.18)
     );
     document.body.style.setProperty(
       "--marginalia-highlight-color-resolved",
-      this.toAlphaColor(this.settings.resolvedHighlightColor, 0.22)
+      this.toAlphaColor(this.settings.resolvedHighlightColor, 0.12)
+    );
+    document.body.style.setProperty(
+      "--marginalia-highlight-color-active",
+      this.toAlphaColor(this.settings.highlightColor, 0.42)
+    );
+    document.body.style.setProperty(
+      "--marginalia-highlight-color-resolved-active",
+      this.toAlphaColor(this.settings.resolvedHighlightColor, 0.28)
     );
   }
 
@@ -149,8 +157,8 @@ export default class CommentsPlugin extends Plugin {
     };
 
     const markers = buildCommentMarkers(comment);
-    editor.replaceSelection(`${markers.startMarker}${selection}${markers.endMarker}`);
     this.activeCommentId = id;
+    editor.replaceSelection(`${markers.startMarker}${selection}${markers.endMarker}`);
     this.refreshPanel();
   }
 
@@ -219,6 +227,7 @@ export default class CommentsPlugin extends Plugin {
     if (!target) {
       return;
     }
+    this.activeCommentId = commentId;
 
     const from = target.editor.offsetToPos(target.match.annotatedFrom);
     const to = target.editor.offsetToPos(target.match.annotatedTo);
@@ -229,7 +238,6 @@ export default class CommentsPlugin extends Plugin {
       target.editor.setCursor(from);
     }
     target.editor.scrollIntoView({ from, to }, true);
-    this.activeCommentId = commentId;
     this.refreshPanel();
   }
 
