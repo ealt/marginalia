@@ -19,6 +19,7 @@ Patch release.
 - Visually emphasize the selected comment's highlighted text and inline icon in the editor
 - Reduce non-selected highlight opacity to improve contrast with the selected comment highlight
 - Fix selected-highlight sync so the emphasized editor highlight follows the newly selected comment immediately
+- Make selected highlight emphasis and jump-to-comment behavior work in reading mode as well
 
 ## 0.1.0
 

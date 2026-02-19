@@ -46,12 +46,23 @@ export function createReadingModePostProcessor(plugin: CommentsPlugin): Markdown
         snapshot.spans,
         matchIndex,
         matchIndex + annotatedText.length,
-        parsed.comment.resolved ? "marginalia-highlight marginalia-highlight-resolved" : "marginalia-highlight"
+        buildReadingHighlightClass(parsed.comment.resolved, parsed.comment.id === plugin.activeCommentId),
+        parsed.comment.id
       );
 
       searchStart = matchIndex + annotatedText.length;
     }
   };
+}
+
+function buildReadingHighlightClass(isResolved: boolean, isActive: boolean): string {
+  return [
+    "marginalia-highlight",
+    isResolved ? "marginalia-highlight-resolved" : "",
+    isActive ? "marginalia-highlight-active" : ""
+  ]
+    .filter((value) => value.length > 0)
+    .join(" ");
 }
 
 function snapshotText(root: HTMLElement): TextSnapshot {
@@ -77,7 +88,7 @@ function snapshotText(root: HTMLElement): TextSnapshot {
   return { text: fullText, spans };
 }
 
-function wrapTextRange(spans: TextNodeSpan[], from: number, to: number, className: string): void {
+function wrapTextRange(spans: TextNodeSpan[], from: number, to: number, className: string, commentId: string): void {
   for (const span of spans) {
     if (span.end <= from || span.start >= to) {
       continue;
@@ -109,6 +120,7 @@ function wrapTextRange(spans: TextNodeSpan[], from: number, to: number, classNam
 
     const wrapper = document.createElement("span");
     wrapper.className = className;
+    wrapper.setAttribute("data-marginalia-id", commentId);
     parent.replaceChild(wrapper, target);
     wrapper.appendChild(target);
   }

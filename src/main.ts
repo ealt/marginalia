@@ -228,6 +228,10 @@ export default class CommentsPlugin extends Plugin {
       return;
     }
     this.activeCommentId = commentId;
+    if (this.jumpToCommentInReadingMode(commentId)) {
+      this.refreshPanel();
+      return;
+    }
 
     const from = target.editor.offsetToPos(target.match.annotatedFrom);
     const to = target.editor.offsetToPos(target.match.annotatedTo);
@@ -270,6 +274,7 @@ export default class CommentsPlugin extends Plugin {
         view.redraw();
       }
     }
+    this.updateReadingModeActiveHighlight();
   }
 
   private async handleIconClick(commentId: string): Promise<void> {
@@ -428,5 +433,45 @@ export default class CommentsPlugin extends Plugin {
     const adapter = this.app.vault.adapter as { getBasePath?: () => string };
     const basePath = adapter.getBasePath?.();
     return typeof basePath === "string" && basePath.length > 0 ? basePath : undefined;
+  }
+
+  private jumpToCommentInReadingMode(commentId: string): boolean {
+    const activeView = this.getActiveMarkdownView();
+    if (!activeView || activeView.getMode() !== "preview") {
+      return false;
+    }
+
+    const findHighlightedComment = (): HTMLElement | null => {
+      return activeView.previewMode.containerEl.querySelector<HTMLElement>(
+        `.marginalia-highlight[data-marginalia-id="${commentId}"]`
+      );
+    };
+
+    let highlightEl = findHighlightedComment();
+    if (!highlightEl) {
+      activeView.previewMode.rerender();
+      highlightEl = findHighlightedComment();
+    }
+    if (!highlightEl) {
+      return false;
+    }
+
+    highlightEl.scrollIntoView({ block: "center" });
+    return true;
+  }
+
+  private updateReadingModeActiveHighlight(): void {
+    const activeView = this.getActiveMarkdownView();
+    if (!activeView || activeView.getMode() !== "preview") {
+      return;
+    }
+
+    const highlightEls = activeView.previewMode.containerEl.querySelectorAll<HTMLElement>(
+      ".marginalia-highlight[data-marginalia-id]"
+    );
+    highlightEls.forEach((highlightEl) => {
+      const isActive = this.activeCommentId !== null && highlightEl.dataset.marginaliaId === this.activeCommentId;
+      highlightEl.classList.toggle("marginalia-highlight-active", isActive);
+    });
   }
 }
