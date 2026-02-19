@@ -9,6 +9,7 @@ body {
   background: var(--marginalia-highlight-color);
   border-bottom: 1px solid var(--text-accent);
   border-radius: 2px;
+  cursor: pointer;
 }
 
 .marginalia-highlight-active {

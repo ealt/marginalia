@@ -24,6 +24,8 @@ export default class CommentsPlugin extends Plugin {
     this.registerEditorExtension(
       createCommentsEditorExtension((commentId) => {
         void this.handleIconClick(commentId);
+      }, (commentId) => {
+        this.selectCommentFromDocument(commentId);
       }, () => this.activeCommentId)
     );
     this.registerMarkdownPostProcessor(createReadingModePostProcessor(this));
@@ -243,6 +245,13 @@ export default class CommentsPlugin extends Plugin {
     }
     target.editor.scrollIntoView({ from, to }, true);
     this.refreshPanel();
+  }
+
+  selectCommentFromDocument(commentId: string): void {
+    this.activeCommentId = commentId;
+    void this.togglePanel(true).then(() => {
+      this.refreshPanel();
+    });
   }
 
   async togglePanel(forceOpen = false): Promise<void> {

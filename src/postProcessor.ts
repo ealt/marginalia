@@ -47,7 +47,10 @@ export function createReadingModePostProcessor(plugin: CommentsPlugin): Markdown
         matchIndex,
         matchIndex + annotatedText.length,
         buildReadingHighlightClass(parsed.comment.resolved, parsed.comment.id === plugin.activeCommentId),
-        parsed.comment.id
+        parsed.comment.id,
+        (commentId) => {
+          plugin.selectCommentFromDocument(commentId);
+        }
       );
 
       searchStart = matchIndex + annotatedText.length;
@@ -88,7 +91,14 @@ function snapshotText(root: HTMLElement): TextSnapshot {
   return { text: fullText, spans };
 }
 
-function wrapTextRange(spans: TextNodeSpan[], from: number, to: number, className: string, commentId: string): void {
+function wrapTextRange(
+  spans: TextNodeSpan[],
+  from: number,
+  to: number,
+  className: string,
+  commentId: string,
+  onCommentSelect: (commentId: string) => void
+): void {
   for (const span of spans) {
     if (span.end <= from || span.start >= to) {
       continue;
@@ -121,6 +131,10 @@ function wrapTextRange(spans: TextNodeSpan[], from: number, to: number, classNam
     const wrapper = document.createElement("span");
     wrapper.className = className;
     wrapper.setAttribute("data-marginalia-id", commentId);
+    wrapper.addEventListener("click", (event) => {
+      event.stopPropagation();
+      onCommentSelect(commentId);
+    });
     parent.replaceChild(wrapper, target);
     wrapper.appendChild(target);
   }

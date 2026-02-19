@@ -105,6 +105,7 @@ function buildDecorations(docText: string, activeCommentId: string | null): Deco
 
 export function createCommentsEditorExtension(
   onIconClick: (commentId: string) => void,
+  onHighlightClick: (commentId: string) => void,
   getActiveCommentId: () => string | null
 ): Extension {
   return ViewPlugin.fromClass(
@@ -112,6 +113,7 @@ export function createCommentsEditorExtension(
       decorations: DecorationSet;
       private readonly view: EditorView;
       private readonly onIconClick: (event: Event) => void;
+      private readonly onHighlightClick: (event: MouseEvent) => void;
       private activeCommentId: string | null;
 
       constructor(view: EditorView) {
@@ -124,7 +126,27 @@ export function createCommentsEditorExtension(
             onIconClick(detail.commentId);
           }
         };
+        this.onHighlightClick = (event: MouseEvent) => {
+          const rawTarget = event.target;
+          const targetEl = rawTarget instanceof HTMLElement
+            ? rawTarget
+            : rawTarget instanceof Node
+              ? rawTarget.parentElement
+              : null;
+          if (!targetEl) {
+            return;
+          }
+
+          const highlightEl = targetEl.closest<HTMLElement>(".marginalia-highlight[data-marginalia-id]");
+          const commentId = highlightEl?.dataset.marginaliaId;
+          if (!commentId) {
+            return;
+          }
+
+          onHighlightClick(commentId);
+        };
         this.view.dom.addEventListener(COMMENT_ICON_CLICK_EVENT, this.onIconClick as EventListener);
+        this.view.dom.addEventListener("click", this.onHighlightClick as EventListener);
       }
 
       update(update: ViewUpdate): void {
@@ -137,6 +159,7 @@ export function createCommentsEditorExtension(
 
       destroy(): void {
         this.view.dom.removeEventListener(COMMENT_ICON_CLICK_EVENT, this.onIconClick as EventListener);
+        this.view.dom.removeEventListener("click", this.onHighlightClick as EventListener);
       }
     },
     {

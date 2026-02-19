@@ -20,6 +20,7 @@ Patch release.
 - Reduce non-selected highlight opacity to improve contrast with the selected comment highlight
 - Fix selected-highlight sync so the emphasized editor highlight follows the newly selected comment immediately
 - Make selected highlight emphasis and jump-to-comment behavior work in reading mode as well
+- Allow clicking highlighted text in the document to select and focus the matching comment in the side panel
 
 ## 0.1.0
 

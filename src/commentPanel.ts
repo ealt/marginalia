@@ -115,5 +115,8 @@ export class CommentPanelView extends ItemView {
         this.plugin.deleteComment(parsed.comment.id);
       });
     }
+
+    const selectedCard = root.querySelector<HTMLElement>(".marginalia-card.is-selected");
+    selectedCard?.scrollIntoView({ block: "nearest" });
   }
 }
