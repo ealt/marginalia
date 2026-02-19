@@ -13,6 +13,7 @@ Patch release.
 - Fix panel action behavior when the comments panel has focus
 - `Jump`, `Edit`, `Resolve`, and `Delete` now correctly target the active note's markdown editor from the panel
 - Prevent panel fallback to "Open a markdown note to view comments" during panel-initiated actions
+- Default new comment author to `git config user.name` when the Author name setting is blank (fallback: `Unknown`)
 
 ## 0.1.0
 

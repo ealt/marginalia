@@ -143,7 +143,7 @@ export default class CommentsPlugin extends Plugin {
       v: 1,
       id,
       text: commentText,
-      author: this.settings.authorName || "Unknown",
+      author: this.resolveCommentAuthor(),
       ts: Math.floor(Date.now() / 1000),
       resolved: false
     };
@@ -365,5 +365,60 @@ export default class CommentsPlugin extends Plugin {
     }
 
     return null;
+  }
+
+  private resolveCommentAuthor(): string {
+    const configuredAuthor = this.settings.authorName.trim();
+    if (configuredAuthor.length > 0) {
+      return configuredAuthor;
+    }
+
+    const gitUserName = this.getGitUserName();
+    if (gitUserName) {
+      return gitUserName;
+    }
+
+    return "Unknown";
+  }
+
+  private getGitUserName(): string | null {
+    const requireFn = (globalThis as { require?: (id: string) => unknown }).require;
+    if (!requireFn) {
+      return null;
+    }
+
+    const cwd = this.getVaultBasePath();
+    const childProcess = requireFn("child_process") as {
+      execFileSync?: (file: string, args: string[], options?: { cwd?: string; encoding: "utf8" }) => string;
+    };
+    if (typeof childProcess.execFileSync !== "function") {
+      return null;
+    }
+    const execFileSync = childProcess.execFileSync;
+
+    const runGitConfig = (args: string[]): string | null => {
+      try {
+        return execFileSync("git", ["config", ...args], {
+          cwd,
+          encoding: "utf8"
+        }).trim();
+      } catch {
+        return null;
+      }
+    };
+
+    const localOrGlobal = runGitConfig(["--get", "user.name"]);
+    if (localOrGlobal && localOrGlobal.length > 0) {
+      return localOrGlobal;
+    }
+
+    const globalName = runGitConfig(["--global", "--get", "user.name"]);
+    return globalName && globalName.length > 0 ? globalName : null;
+  }
+
+  private getVaultBasePath(): string | undefined {
+    const adapter = this.app.vault.adapter as { getBasePath?: () => string };
+    const basePath = adapter.getBasePath?.();
+    return typeof basePath === "string" && basePath.length > 0 ? basePath : undefined;
   }
 }

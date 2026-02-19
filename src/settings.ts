@@ -15,7 +15,7 @@ export class CommentsSettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("Author name")
-      .setDesc("Default author label used when adding new comments.")
+      .setDesc("Default author label used when adding comments. Leave blank to use git user.name (fallback: Unknown).")
       .addText((text) => {
         text.setPlaceholder("Your name");
         text.setValue(this.plugin.settings.authorName);
