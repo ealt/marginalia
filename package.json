@@ -9,7 +9,8 @@
     "check": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "version-bump": "node scripts/version-bump.mjs"
+    "lint:plugin": "node ~/Documents/toolchain/scripts/obsidian-plugin-lint.mjs",
+    "version-bump": "node ~/Documents/toolchain/scripts/obsidian-version-bump.mjs"
   },
   "devDependencies": {
     "@codemirror/state": "6.5.0",
