@@ -1,7 +1,7 @@
 {
   "id": "marginalia",
   "name": "Marginalia",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "minAppVersion": "1.5.0",
   "description": "Add inline comments to any document. Select text, leave a comment, and collaborate with highlights, a sidebar panel, and resolution tracking — all stored invisibly in standard markdown.",
   "author": "Eric Alt",

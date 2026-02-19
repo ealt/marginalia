@@ -1,6 +1,6 @@
 {
   "name": "obsidian-marginalia",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Add inline comments to any document. Select text, leave a comment, and collaborate with highlights, a sidebar panel, and resolution tracking — all stored invisibly in standard markdown.",
   "main": "main.js",
   "scripts": {
