@@ -10,6 +10,7 @@ import { Comment, CommentsPluginSettings, DEFAULT_SETTINGS } from "./types";
 export default class CommentsPlugin extends Plugin {
   settings: CommentsPluginSettings = DEFAULT_SETTINGS;
   activeCommentId: string | null = null;
+  private lastMarkdownLeaf: WorkspaceLeaf | null = null;
 
   async onload(): Promise<void> {
     await this.loadSettings();
@@ -60,15 +61,44 @@ export default class CommentsPlugin extends Plugin {
       void this.togglePanel();
     });
 
-    this.registerEvent(this.app.workspace.on("active-leaf-change", () => this.refreshPanel()));
-    this.registerEvent(this.app.workspace.on("file-open", () => this.refreshPanel()));
+    this.lastMarkdownLeaf = this.resolveMarkdownLeaf();
+
+    this.registerEvent(
+      this.app.workspace.on("active-leaf-change", (leaf) => {
+        this.rememberMarkdownLeaf(leaf);
+        this.refreshPanel();
+      })
+    );
+    this.registerEvent(
+      this.app.workspace.on("file-open", () => {
+        this.rememberMarkdownLeaf(this.app.workspace.activeLeaf);
+        this.refreshPanel();
+      })
+    );
 
     this.addSettingTab(new CommentsSettingTab(this.app, this));
   }
 
 
   getActiveMarkdownView(): MarkdownView | null {
-    return this.app.workspace.getActiveViewOfType(MarkdownView);
+    const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+    if (activeView?.file) {
+      this.rememberMarkdownLeaf(this.app.workspace.activeLeaf);
+      return activeView;
+    }
+
+    const rememberedView = this.lastMarkdownLeaf?.view;
+    if (rememberedView instanceof MarkdownView && rememberedView.file) {
+      return rememberedView;
+    }
+
+    const fallbackLeaf = this.resolveMarkdownLeaf();
+    if (fallbackLeaf?.view instanceof MarkdownView) {
+      this.lastMarkdownLeaf = fallbackLeaf;
+      return fallbackLeaf.view;
+    }
+
+    return null;
   }
 
   async loadSettings(): Promise<void> {
@@ -308,5 +338,32 @@ export default class CommentsPlugin extends Plugin {
     }
 
     return input;
+  }
+
+  private rememberMarkdownLeaf(leaf: WorkspaceLeaf | null): void {
+    if (leaf?.view instanceof MarkdownView && leaf.view.file) {
+      this.lastMarkdownLeaf = leaf;
+    }
+  }
+
+  private resolveMarkdownLeaf(): WorkspaceLeaf | null {
+    const activeFile = this.app.workspace.getActiveFile();
+    const markdownLeaves = this.app.workspace.getLeavesOfType("markdown");
+
+    if (activeFile) {
+      for (const leaf of markdownLeaves) {
+        if (leaf.view instanceof MarkdownView && leaf.view.file?.path === activeFile.path) {
+          return leaf;
+        }
+      }
+    }
+
+    for (const leaf of markdownLeaves) {
+      if (leaf.view instanceof MarkdownView && leaf.view.file) {
+        return leaf;
+      }
+    }
+
+    return null;
   }
 }
