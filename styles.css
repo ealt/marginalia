@@ -69,10 +69,20 @@ body {
   padding: 10px;
   margin-bottom: 10px;
   background: var(--background-secondary);
+  cursor: pointer;
 }
 
 .marginalia-card.is-selected {
   border-color: var(--interactive-accent);
+}
+
+.marginalia-card:hover {
+  border-color: var(--interactive-accent);
+}
+
+.marginalia-card:focus-visible {
+  outline: 2px solid var(--interactive-accent);
+  outline-offset: 2px;
 }
 
 .marginalia-card.is-resolved {

@@ -14,6 +14,8 @@ Patch release.
 - `Jump`, `Edit`, `Resolve`, and `Delete` now correctly target the active note's markdown editor from the panel
 - Prevent panel fallback to "Open a markdown note to view comments" during panel-initiated actions
 - Default new comment author to `git config user.name` when the Author name setting is blank (fallback: `Unknown`)
+- Make comment cards clickable to select and jump directly from the panel
+- Remove the redundant `Jump` button from each comment card
 
 ## 0.1.0
 

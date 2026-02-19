@@ -62,12 +62,21 @@ export class CommentPanelView extends ItemView {
     for (const parsed of comments) {
       const card = root.createDiv({ cls: "marginalia-card" });
       card.dataset.commentId = parsed.comment.id;
+      card.setAttribute("role", "button");
+      card.setAttribute("tabindex", "0");
       if (parsed.comment.resolved) {
         card.classList.add("is-resolved");
       }
       if (this.plugin.activeCommentId === parsed.comment.id) {
         card.classList.add("is-selected");
       }
+      card.addEventListener("click", () => this.plugin.jumpToComment(parsed.comment.id));
+      card.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          this.plugin.jumpToComment(parsed.comment.id);
+        }
+      });
 
       const annotatedText = docText
         .slice(parsed.annotatedFrom, parsed.annotatedTo)
@@ -88,21 +97,21 @@ export class CommentPanelView extends ItemView {
 
       const actions = card.createDiv({ cls: "marginalia-card-actions" });
 
-      const jumpButton = actions.createEl("button", { text: "Jump" });
-      jumpButton.addEventListener("click", () => this.plugin.jumpToComment(parsed.comment.id));
-
       const editButton = actions.createEl("button", { text: "Edit" });
-      editButton.addEventListener("click", () => {
+      editButton.addEventListener("click", (event) => {
+        event.stopPropagation();
         void this.plugin.editComment(parsed.comment.id);
       });
 
       const resolveButton = actions.createEl("button", { text: parsed.comment.resolved ? "Unresolve" : "Resolve" });
-      resolveButton.addEventListener("click", () => {
+      resolveButton.addEventListener("click", (event) => {
+        event.stopPropagation();
         this.plugin.resolveComment(parsed.comment.id);
       });
 
       const deleteButton = actions.createEl("button", { text: "Delete" });
-      deleteButton.addEventListener("click", () => {
+      deleteButton.addEventListener("click", (event) => {
+        event.stopPropagation();
         this.plugin.deleteComment(parsed.comment.id);
       });
     }
