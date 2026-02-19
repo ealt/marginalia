@@ -66,9 +66,6 @@ export default class CommentsPlugin extends Plugin {
     this.addSettingTab(new CommentsSettingTab(this.app, this));
   }
 
-  onunload(): void {
-    this.app.workspace.detachLeavesOfType(COMMENT_PANEL_VIEW_TYPE);
-  }
 
   getActiveMarkdownView(): MarkdownView | null {
     return this.app.workspace.getActiveViewOfType(MarkdownView);

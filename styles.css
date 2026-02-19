@@ -116,3 +116,15 @@ body {
 .marginalia-card-actions button:hover {
   border-color: var(--interactive-accent);
 }
+
+.marginalia-modal-textarea {
+  width: 100%;
+  resize: vertical;
+}
+
+.marginalia-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}

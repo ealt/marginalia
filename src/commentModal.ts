@@ -23,19 +23,13 @@ class CommentModal extends Modal {
 
     contentEl.createEl("h3", { text: this.options.title });
 
-    const textarea = contentEl.createEl("textarea");
+    const textarea = contentEl.createEl("textarea", { cls: "marginalia-modal-textarea" });
     textarea.value = this.options.initialValue ?? "";
     textarea.rows = 6;
-    textarea.style.width = "100%";
-    textarea.style.resize = "vertical";
     textarea.focus();
     textarea.setSelectionRange(textarea.value.length, textarea.value.length);
 
-    const actions = contentEl.createDiv();
-    actions.style.display = "flex";
-    actions.style.justifyContent = "flex-end";
-    actions.style.gap = "8px";
-    actions.style.marginTop = "12px";
+    const actions = contentEl.createDiv({ cls: "marginalia-modal-actions" });
 
     const cancelButton = actions.createEl("button", { text: "Cancel" });
     const submitButton = actions.createEl("button", { text: this.options.submitLabel });

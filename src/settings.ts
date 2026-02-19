@@ -12,7 +12,6 @@ export class CommentsSettingTab extends PluginSettingTab {
   display(): void {
     const { containerEl } = this;
     containerEl.empty();
-    containerEl.createEl("h2", { text: "Obsidian Comments Settings" });
 
     new Setting(containerEl)
       .setName("Author name")
