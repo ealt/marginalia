@@ -1,9 +1,7 @@
 name: Release
 
 on:
-  push:
-    tags:
-      - "v*"
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -28,23 +26,28 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Validate tag vs manifest version
+      - name: Read version from manifest
+        id: version
+        run: echo "version=$(node -p "require('./manifest.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Check tag does not already exist
         run: |
-          TAG="${GITHUB_REF_NAME#v}"
-          MANIFEST_VERSION="$(node -p "require('./manifest.json').version")"
-          if [ "$TAG" != "$MANIFEST_VERSION" ]; then
-            echo "Tag version ($TAG) does not match manifest version ($MANIFEST_VERSION)."
+          if git rev-parse "refs/tags/${{ steps.version.outputs.version }}" >/dev/null 2>&1; then
+            echo "Tag ${{ steps.version.outputs.version }} already exists."
             exit 1
           fi
 
-      - name: Build release zip
+      - name: Create tag
         run: |
-          VERSION="${GITHUB_REF_NAME#v}"
-          ZIP_NAME="inline-comments-ericalt-${VERSION}.zip"
-          zip -j "$ZIP_NAME" manifest.json main.js styles.css versions.json
-          echo "ZIP_NAME=$ZIP_NAME" >> "$GITHUB_ENV"
+          git tag "${{ steps.version.outputs.version }}"
+          git push origin "${{ steps.version.outputs.version }}"
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: ${{ env.ZIP_NAME }}
+          tag_name: ${{ steps.version.outputs.version }}
+          name: ${{ steps.version.outputs.version }}
+          files: |
+            main.js
+            manifest.json
+            styles.css

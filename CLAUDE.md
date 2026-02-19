@@ -14,6 +14,7 @@ npm run dev         # Watch mode with inline sourcemaps
 npm run check       # TypeScript type-check (no emit)
 npm run test        # Unit tests (Vitest)
 npm run test:watch  # Tests in watch mode
+npm run version-bump patch  # Bump version in manifest.json, package.json, versions.json (also: minor, major, or explicit x.y.z)
 ```
 
 Run a single test file: `npx vitest run tests/commentParser.test.ts`
@@ -54,8 +55,20 @@ Tests live in `tests/` and use Vitest. Currently only `commentParser.ts` has uni
 
 ## CI/CD
 
-- **CI** (`.github/workflows/ci.yml`): On push/PR → install, type-check, test, build.
-- **Release** (`.github/workflows/release.yml`): On `v*` tag → validates version matches `manifest.json`, builds zip with `manifest.json`, `main.js`, `styles.css`, `versions.json`.
+- **CI** (`.github/workflows/ci.yml`): On push/PR → install, type-check, test, plugin lint, build.
+- **Release** (`.github/workflows/release.yml`): Manual `workflow_dispatch` → reads version from `manifest.json`, creates git tag, builds, publishes GitHub release with `main.js`, `manifest.json`, `styles.css` as individual assets. Typical flow: `npm run version-bump patch`, commit, push, then click "Run workflow" in GitHub Actions.
+
+## Obsidian Community Plugin Guidelines
+
+`scripts/obsidian-plugin-lint.mjs` checks common rejection reasons. Key rules to follow:
+- **Naming**: id/name/description must not contain "Obsidian" or end with "Plugin"
+- **Settings tabs**: no top-level headings (`<h1>`/`<h2>`)
+- **No `detachLeavesOfType` in `onunload`** — Obsidian handles cleanup
+- **No inline styles** — use CSS classes
+- **No `innerHTML`/`outerHTML`** — use `createEl`/`createDiv`
+- **No `console.log`** — only `console.error`/`console.warn` for actual errors
+- **No default hotkeys** in command definitions
+- **Use `this.app`** not global `app`; **use `getActiveViewOfType()`** not `workspace.activeLeaf`
 
 ## Local Testing in Obsidian
 

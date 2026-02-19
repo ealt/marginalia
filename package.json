@@ -8,7 +8,8 @@
     "build": "node esbuild.config.mjs production",
     "check": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "version-bump": "node scripts/version-bump.mjs"
   },
   "devDependencies": {
     "@codemirror/state": "6.5.0",
