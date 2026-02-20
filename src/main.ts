@@ -11,6 +11,7 @@ export default class CommentsPlugin extends Plugin {
   settings: CommentsPluginSettings = DEFAULT_SETTINGS;
   activeCommentId: string | null = null;
   private lastMarkdownLeaf: WorkspaceLeaf | null = null;
+  private dynamicStyleEl: HTMLStyleElement | null = null;
 
   async onload(): Promise<void> {
     await this.loadSettings();
@@ -73,7 +74,7 @@ export default class CommentsPlugin extends Plugin {
     );
     this.registerEvent(
       this.app.workspace.on("file-open", () => {
-        this.rememberMarkdownLeaf(this.app.workspace.activeLeaf);
+        this.rememberMarkdownLeaf(this.resolveMarkdownLeaf());
         this.refreshPanel();
       })
     );
@@ -85,7 +86,7 @@ export default class CommentsPlugin extends Plugin {
   getActiveMarkdownView(): MarkdownView | null {
     const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
     if (activeView?.file) {
-      this.rememberMarkdownLeaf(this.app.workspace.activeLeaf);
+      this.rememberMarkdownLeaf(this.resolveMarkdownLeaf());
       return activeView;
     }
 
@@ -115,22 +116,24 @@ export default class CommentsPlugin extends Plugin {
   }
 
   updateHighlightStyles(): void {
-    document.body.style.setProperty(
-      "--marginalia-highlight-color",
-      this.toAlphaColor(this.settings.highlightColor, 0.18)
-    );
-    document.body.style.setProperty(
-      "--marginalia-highlight-color-resolved",
-      this.toAlphaColor(this.settings.resolvedHighlightColor, 0.12)
-    );
-    document.body.style.setProperty(
-      "--marginalia-highlight-color-active",
-      this.toAlphaColor(this.settings.highlightColor, 0.42)
-    );
-    document.body.style.setProperty(
-      "--marginalia-highlight-color-resolved-active",
-      this.toAlphaColor(this.settings.resolvedHighlightColor, 0.28)
-    );
+    const styleText = `
+body {
+  --marginalia-highlight-color: ${this.toAlphaColor(this.settings.highlightColor, 0.18)};
+  --marginalia-highlight-color-resolved: ${this.toAlphaColor(this.settings.resolvedHighlightColor, 0.12)};
+  --marginalia-highlight-color-active: ${this.toAlphaColor(this.settings.highlightColor, 0.42)};
+  --marginalia-highlight-color-resolved-active: ${this.toAlphaColor(this.settings.resolvedHighlightColor, 0.28)};
+}
+`;
+    if (!this.dynamicStyleEl) {
+      this.dynamicStyleEl = document.createElement("style");
+      this.dynamicStyleEl.id = "marginalia-dynamic-colors";
+      document.head.appendChild(this.dynamicStyleEl);
+      this.register(() => {
+        this.dynamicStyleEl?.remove();
+        this.dynamicStyleEl = null;
+      });
+    }
+    this.dynamicStyleEl.textContent = styleText;
   }
 
   async addComment(editor: Editor): Promise<void> {

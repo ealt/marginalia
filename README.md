@@ -24,6 +24,16 @@ and resolution tracking -- all stored invisibly in standard markdown.
 - **Portable** -- comments are stored as HTML comment markers, invisible to any
   renderer outside Obsidian
 
+## Disclosures
+
+- **Git config lookup** -- if Author name is blank in plugin settings, Marginalia
+  runs `git config --get user.name` (then `git config --global --get user.name`)
+  to choose a default author label.
+- **No network calls** -- the plugin does not send comment data or note content
+  over the network.
+- **Storage** -- comments are embedded directly in your markdown note as HTML
+  comment markers.
+
 ## How it works
 
 Comments are stored as paired markers in the note source:
