@@ -99,6 +99,19 @@ body {
   margin: 2px 2px 0;
 }
 
+.marginalia-thread-reply {
+  margin: 2px 0 2px 12px;
+}
+
+.marginalia-thread-reply-input {
+  width: 100%;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  background: var(--background-primary);
+  font-size: 12px;
+  padding: 6px 8px;
+}
+
 .marginalia-card {
   border: 1px solid var(--background-modifier-border);
   border-radius: 8px;

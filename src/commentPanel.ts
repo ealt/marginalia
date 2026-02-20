@@ -112,14 +112,6 @@ export class CommentPanelView extends ItemView {
       const actions = card.createDiv({ cls: "marginalia-card-actions" });
       const canModify = this.plugin.canCurrentUserEditOrDelete(author);
 
-      if (!options.isChild) {
-        const replyButton = actions.createEl("button", { text: "Reply" });
-        replyButton.addEventListener("click", (event) => {
-          event.stopPropagation();
-          void this.plugin.replyToComment(parsed.comment.id);
-        });
-      }
-
       if (canModify) {
         const editButton = actions.createEl("button", { text: "Edit" });
         editButton.addEventListener("click", (event) => {
@@ -182,6 +174,31 @@ export class CommentPanelView extends ItemView {
             { isChild: true }
           );
         }
+
+        const replyComposer = thread.createDiv({ cls: "marginalia-thread-reply" });
+        const replyInput = replyComposer.createEl("input", {
+          cls: "marginalia-thread-reply-input",
+          type: "text"
+        });
+        replyInput.placeholder = "Reply...";
+
+        const submitReply = (): void => {
+          const replyText = replyInput.value.trim();
+          if (!replyText) {
+            return;
+          }
+          replyInput.disabled = true;
+          void this.plugin.replyToComment(parsed.comment.id, replyText).finally(() => {
+            replyInput.disabled = false;
+          });
+        };
+
+        replyInput.addEventListener("keydown", (event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            submitReply();
+          }
+        });
       }
     }
 

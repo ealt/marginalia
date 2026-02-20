@@ -156,7 +156,7 @@ export default class CommentsPlugin extends Plugin {
     this.refreshPanel();
   }
 
-  async replyToComment(parentCommentId: string): Promise<void> {
+  async replyToComment(parentCommentId: string, replyText?: string): Promise<void> {
     const target = this.findCommentInActiveEditor(parentCommentId);
     if (!target) {
       return;
@@ -166,15 +166,20 @@ export default class CommentsPlugin extends Plugin {
       return;
     }
 
-    const replyText = await this.askForComment({
-      title: "Reply to comment",
-      submitLabel: "Reply"
-    });
-    if (!replyText) {
+    const draftedReply = replyText
+      ?? await this.askForComment({
+        title: "Reply to comment",
+        submitLabel: "Reply"
+      });
+    if (!draftedReply) {
+      return;
+    }
+    const normalizedReply = draftedReply.trim();
+    if (!normalizedReply) {
       return;
     }
 
-    const reply = this.buildNewCommentChild(replyText, target.editor.getValue());
+    const reply = this.buildNewCommentChild(normalizedReply, target.editor.getValue());
     const updatedComment: Comment = {
       ...target.match.comment,
       children: [...target.match.comment.children, reply]
