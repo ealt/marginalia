@@ -2,6 +2,17 @@
 
 All notable changes to Marginalia are documented here.
 
+## 0.2.1
+
+Patch release.
+
+- Fix Obsidian plugin-guideline compliance warnings by removing direct
+  `workspace.activeLeaf` usage in favor of markdown-view leaf resolution
+- Replace JavaScript body style mutation with a managed dynamic stylesheet for
+  highlight color variables
+- Add README disclosures for `git config user.name` author fallback, local data
+  storage, and network behavior
+
 ## 0.2.0
 
 Minor feature release.
