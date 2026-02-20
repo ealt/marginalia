@@ -9,6 +9,7 @@
     "check": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "install:plugin": "bash scripts/install-marginalia.sh",
     "lint:plugin": "node ~/Documents/toolchain/scripts/obsidian-plugin-lint.mjs",
     "version-bump": "node ~/Documents/toolchain/scripts/obsidian-version-bump.mjs"
   },

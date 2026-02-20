@@ -60,6 +60,21 @@ escaped to prevent breaking the outer comment boundary.
 3. Copy the three files into that directory
 4. Enable the plugin in Settings > Community plugins
 
+### Scripted install
+
+```bash
+bash scripts/install-marginalia.sh /path/to/YourVault
+```
+
+If you omit the vault path, the script prompts you to enter one. Use
+`--force` to overwrite existing plugin files or `--help` for full usage.
+
+You can also run it via npm:
+
+```bash
+npm run install:plugin -- /path/to/YourVault
+```
+
 ## Development
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for full setup and workflow details.
