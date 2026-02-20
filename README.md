@@ -7,14 +7,20 @@ and resolution tracking -- all stored invisibly in standard markdown.
 
 ## Features
 
-- **Inline comments** -- add, edit, resolve, and delete comments on any selected
-  text
+- **Inline comments** -- add comments on selected text in editor mode
+- **Threaded replies** -- each top-level comment stores child replies in a
+  `children` list; expanded threads show an inline reply field
 - **Editor highlights** -- colored background for commented ranges with inline
-  icon widgets
-- **Sidebar panel** -- browse all comments with jump, edit, resolve, and delete
-  actions
+  icon widgets and stronger emphasis for the selected thread
+- **Sidebar panel** -- click any card to jump/select, view collapsed/expanded
+  threads, and reply inline
 - **Reading mode** -- optional best-effort highlighting in reading view
-- **Configurable** -- author name, highlight colors, reading mode toggle
+- **Document → panel sync** -- clicking highlighted text selects/focuses the
+  matching thread in the panel
+- **Author permissions** -- only the original author can edit/delete their
+  comment or reply; replies cannot be resolved or replied to
+- **Configurable** -- author name (or git `user.name` fallback), highlight
+  colors, reading mode toggle
 - **Portable** -- comments are stored as HTML comment markers, invisible to any
   renderer outside Obsidian
 
@@ -23,7 +29,7 @@ and resolution tracking -- all stored invisibly in standard markdown.
 Comments are stored as paired markers in the note source:
 
 ```md
-<!-- marginalia-start: a1b2c3d4 -->annotated text<!-- marginalia: {"v":1,"id":"a1b2c3d4","text":"Is this accurate?","author":"Eric","ts":1708300000,"resolved":false} -->
+<!-- marginalia-start: a1b2c3d4 -->annotated text<!-- marginalia: {"v":1,"id":"a1b2c3d4","text":"Is this accurate?","author":"Eric","ts":1708300000,"resolved":false,"children":[{"id":"r9k2m1z8","text":"I agree","author":"Riley","ts":1708300300}]} -->
 ```
 
 Markers are standard HTML comments, so they're invisible in any markdown
@@ -71,8 +77,8 @@ enable the plugin.
 | [CI](.github/workflows/ci.yml) | Push / PR | Install, type-check, test, build |
 | [Release](.github/workflows/release.yml) | Manual dispatch | Tag, build, publish GitHub release |
 
-Release flow: `npm run version-bump patch` > commit > push > run workflow in
-GitHub Actions.
+Release flow: `npm run version-bump patch` (or `minor` / `major`) > commit >
+push > run workflow in GitHub Actions.
 
 ## License
 

@@ -86,6 +86,6 @@ The plugin must pass community plugin review. Key rules enforced by
 
 Releases are handled by maintainers:
 
-1. `npm run version-bump patch` (or `minor`/`major`)
+1. `npm run version-bump <patch|minor|major>` (use `minor` for new features, `patch` for fixes)
 2. Commit and push
 3. Run the Release workflow from GitHub Actions

@@ -4,7 +4,21 @@ All notable changes to Marginalia are documented here.
 
 ## 0.2.0
 
-- Add repository documentation: README, CONTRIBUTING, CHANGELOG, and consolidated AGENTS.md
+Minor feature release.
+
+- Make comment cards clickable (no separate `Jump` button) and keep panel
+  selection synchronized with document navigation
+- Default new comment author to `git config user.name` when the Author name
+  setting is blank (fallback: `Unknown`)
+- Improve selected-comment contrast in editor and reading mode highlights
+- Allow selecting comments by clicking highlighted text in editor/reading mode
+- Restrict edit/delete to the original author, and hide those actions for other
+  users in the panel
+- Add threaded replies as child comments on each top-level comment
+- Expand child replies only when a thread is selected
+- Add inline reply composer at the bottom of expanded threads
+- Disallow reply-to-reply and resolve-on-reply actions
+- Refresh project documentation (README, CONTRIBUTING, AGENTS, CHANGELOG)
 
 ## 0.1.1
 
@@ -13,17 +27,6 @@ Patch release.
 - Fix panel action behavior when the comments panel has focus
 - `Jump`, `Edit`, `Resolve`, and `Delete` now correctly target the active note's markdown editor from the panel
 - Prevent panel fallback to "Open a markdown note to view comments" during panel-initiated actions
-- Default new comment author to `git config user.name` when the Author name setting is blank (fallback: `Unknown`)
-- Make comment cards clickable to select and jump directly from the panel
-- Remove the redundant `Jump` button from each comment card
-- Visually emphasize the selected comment's highlighted text and inline icon in the editor
-- Reduce non-selected highlight opacity to improve contrast with the selected comment highlight
-- Fix selected-highlight sync so the emphasized editor highlight follows the newly selected comment immediately
-- Make selected highlight emphasis and jump-to-comment behavior work in reading mode as well
-- Allow clicking highlighted text in the document to select and focus the matching comment in the side panel
-- Restrict comment edit/delete actions so only the original author can perform them, and hide those actions for other users in the panel
-- Add reply chains with parent-child threading, collapsed child visibility until a thread is selected, and child comments that cannot be replied to or resolved
-- Replace the thread `Reply` button with an inline reply text field at the bottom of expanded threads
 
 ## 0.1.0
 

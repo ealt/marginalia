@@ -1,11 +1,19 @@
-# Obsidian Comments Plugin — Implementation Plan
+# Obsidian Comments Plugin — Implementation Plan (Historical)
+
+> Status (current): this document is the original V1 plan. The implemented
+> plugin now includes additional behavior (threaded child replies, inline thread
+> reply composer, author-based edit/delete permissions, and panel/document
+> selection sync). Use `README.md`, `CONTRIBUTING.md`, and `AGENTS.md` for
+> current behavior.
 
 ## Context
 
 Build an Obsidian plugin from scratch that lets users add comments to document text, similar to Google Docs commenting. Comments are stored as HTML comments in the markdown so they're invisible in any renderer outside Obsidian. The project directory (`/Users/ericalt/Documents/obsidian-comments`) is currently empty.
 
 **V1 scope**: Add/edit/delete/resolve comments, editor highlighting, sidebar panel, configurable reading mode visibility.
-**Deferred**: Threading/replies, emoji reactions, hover tooltips.
+**Deferred (original plan)**: Threading/replies, emoji reactions, hover tooltips.
+**Implemented since this plan**: Threaded replies in `children`, inline reply
+composer in expanded threads, permission checks, and improved selection syncing.
 
 ---
 
@@ -14,7 +22,7 @@ Build an Obsidian plugin from scratch that lets users add comments to document t
 Paired HTML comment markers bracket the annotated text:
 
 ```markdown
-Text before <!-- marginalia-start: a1b2c3 -->annotated text<!-- marginalia: {"v":1,"id":"a1b2c3","text":"Is this accurate?","author":"Eric","ts":1708300000,"resolved":false} --> text after
+Text before <!-- marginalia-start: a1b2c3 -->annotated text<!-- marginalia: {"v":1,"id":"a1b2c3","text":"Is this accurate?","author":"Eric","ts":1708300000,"resolved":false,"children":[{"id":"r9k2m1z8","text":"I agree","author":"Riley","ts":1708300300}]} --> text after
 ```
 
 **Why paired markers?** The start marker pins the beginning of the highlighted range. This survives text edits between the markers, avoids ambiguity with duplicate text, and is invisible in all standard markdown renderers. The start marker is lightweight (just the ID); the end marker carries the full JSON payload.
@@ -57,6 +65,13 @@ Create `manifest.json`, `package.json`, `tsconfig.json`, `esbuild.config.mjs`, `
 
 ### 2. Data model — `src/types.ts`
 ```typescript
+interface CommentChild {
+  id: string;
+  text: string;
+  author: string;
+  ts: number;
+}
+
 interface Comment {
   v: 1;
   id: string;
@@ -64,6 +79,7 @@ interface Comment {
   author: string;
   ts: number;         // Unix timestamp (seconds)
   resolved: boolean;
+  children: CommentChild[];
 }
 
 interface CommentWithPosition {

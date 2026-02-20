@@ -21,7 +21,7 @@ npm run check           # TypeScript type-check (tsc --noEmit)
 npm run test            # Unit tests (Vitest)
 npm run test:watch      # Tests in watch mode
 npm run lint:plugin     # Obsidian community plugin lint
-npm run version-bump patch  # Bump version (also: minor, major, or x.y.z)
+npm run version-bump -- patch  # Bump version (also: minor, major, or x.y.z)
 ```
 
 Run a single test file: `npx vitest run tests/commentParser.test.ts`
@@ -37,11 +37,11 @@ target). Obsidian, electron, and CodeMirror packages are externalized.
 
 ```
 src/
-├── main.ts            — Plugin entry, commands, comment CRUD
-├── types.ts           — Comment, CommentWithPosition, Settings interfaces
+├── main.ts            — Plugin entry, commands, comment/reply CRUD
+├── types.ts           — Comment, CommentChild, CommentWithPosition, settings
 ├── commentParser.ts   — Pure parsing/serialization (no Obsidian deps)
 ├── editorExtension.ts — CM6 ViewPlugin: highlights, marker hiding, icon widget
-├── commentPanel.ts    — Sidebar ItemView listing all comments
+├── commentPanel.ts    — Sidebar ItemView with threaded comments + inline reply field
 ├── commentModal.ts    — Modal for add/edit comment text
 ├── postProcessor.ts   — Reading mode highlighting via DOM TreeWalker
 └── settings.ts        — Settings tab: author, colors, reading mode toggle
@@ -55,17 +55,20 @@ Release artifacts: `main.js`, `manifest.json`, `styles.css`, `versions.json`
 
 - **`main.ts`** — `CommentsPlugin extends Plugin`. Registers commands, editor
   extension, sidebar view, context menu, ribbon icon. Contains all comment CRUD
-  methods (add/edit/resolve/delete/jump). Manages `activeCommentId` state for
-  sidebar highlighting.
+  methods (add/reply/edit/resolve/delete/jump). Enforces permissions: only
+  authors can edit/delete, child replies cannot be resolved/replied to. Manages
+  `activeCommentId` for panel + highlight syncing.
 - **`commentParser.ts`** — Pure functions. Regex-based parsing of paired
   markers, JSON serialization with `-->` escape (`--\u003e`), ID generation,
-  strict validation. Only module with unit tests.
+  strict validation (including `children` reply payloads). Only module with unit
+  tests.
 - **`editorExtension.ts`** — CodeMirror 6 `ViewPlugin`. Re-parses on every
   `docChanged`, creates three decorations per comment: replace (hide start
   marker), mark (highlight text), replace with `CommentIconWidget` (end marker →
-  clickable icon). Click dispatches `marginalia-icon-click` custom event.
+  clickable icon). Clicks on highlights/icons synchronize selection with panel.
 - **`commentPanel.ts`** — `CommentPanelView extends ItemView`. Sidebar listing
-  all comments with preview text, metadata, and action buttons. Redraws on
+  threaded top-level comments. Child replies are collapsed until thread
+  selection. Expanded threads include inline reply input. Redraws on
   active-leaf-change and after comment operations.
 - **`commentModal.ts`** — Simple `Modal` with textarea for add/edit flows.
   Cmd/Ctrl+Enter submits.
@@ -87,6 +90,9 @@ sequence in JSON is escaped as `--\u003e` during serialization. The parser regex
 captures everything between `marginalia:` and `-->` as the payload, then runs
 `JSON.parse()`.
 
+Top-level payloads now include a `children` array for replies. Replies are not
+stored as separate marker pairs.
+
 ### Key Conventions
 
 - Styles use CSS custom properties (`--marginalia-highlight-color`,
@@ -96,6 +102,8 @@ captures everything between `marginalia:` and `-->` as the payload, then runs
 - No overlapping comments (V1 limitation).
 - Reading mode highlighting is best-effort; editor mode is the primary
   experience.
+- Clicking highlighted text in editor/reading mode should select/focus matching
+  panel thread.
 
 ## Coding Style
 
@@ -132,8 +140,8 @@ making it directly testable.
 - **Release** (`.github/workflows/release.yml`): Manual `workflow_dispatch` →
   reads version from `manifest.json`, creates git tag, builds, publishes GitHub
   release with `main.js`, `manifest.json`, `styles.css` as individual assets.
-  Typical flow: `npm run version-bump patch`, commit, push, then click "Run
-  workflow" in GitHub Actions.
+  Typical flow: `npm run version-bump <patch|minor|major>`, commit, push, then
+  click "Run workflow" in GitHub Actions.
 
 ## Obsidian Community Plugin Rules
 
