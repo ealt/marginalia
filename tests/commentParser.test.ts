@@ -16,6 +16,7 @@ function makeComment(overrides: Partial<Comment> = {}): Comment {
     author: "Eric",
     ts: 1708300000,
     resolved: false,
+    children: [],
     ...overrides
   };
 }
@@ -63,6 +64,43 @@ describe("commentParser", () => {
   it("rejects pairs where start marker id and payload id mismatch", () => {
     const payload = JSON.stringify(makeComment({ id: "payload01" }));
     const doc = `<!-- marginalia-start: start01 -->text<!-- marginalia: ${payload} -->`;
+
+    const result = parseCommentsWithDiagnostics(doc);
+    expect(result.comments).toHaveLength(0);
+    expect(result.invalidPairs).toBe(1);
+  });
+
+  it("parses optional children list for threaded replies", () => {
+    const parent = makeComment({
+      id: "parent01",
+      children: [
+        {
+          id: "reply001",
+          text: "Reply text",
+          author: "Riley",
+          ts: 1708300001
+        }
+      ]
+    });
+    const doc = `${buildCommentMarkers(parent).startMarker}top${buildCommentMarkers(parent).endMarker}`;
+
+    const parsed = parseComments(doc);
+    expect(parsed).toHaveLength(1);
+    expect(parsed[0].comment.children).toHaveLength(1);
+    expect(parsed[0].comment.children[0].id).toBe("reply001");
+  });
+
+  it("rejects payloads with invalid children shape", () => {
+    const payload = JSON.stringify({
+      v: 1,
+      id: "a1b2c3d4",
+      text: "Test comment",
+      author: "Eric",
+      ts: 1708300000,
+      resolved: false,
+      children: [{ id: "bad id", text: "x", author: "a", ts: 1 }]
+    });
+    const doc = `<!-- marginalia-start: a1b2c3d4 -->text<!-- marginalia: ${payload} -->`;
 
     const result = parseCommentsWithDiagnostics(doc);
     expect(result.comments).toHaveLength(0);

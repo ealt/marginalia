@@ -1,4 +1,4 @@
-import { Comment, CommentWithPosition, ParseCommentsResult } from "./types";
+import { Comment, CommentChild, CommentWithPosition, ParseCommentsResult } from "./types";
 
 const COMMENT_PAIR_REGEX =
   /(<!--\s*marginalia-start:\s*([a-zA-Z0-9_-]+)\s*-->)([\s\S]*?)(<!--\s*marginalia:\s*([\s\S]*?)\s*-->)/g;
@@ -80,13 +80,19 @@ export function validateParsedComment(parsed: unknown, startId: string): Comment
     return null;
   }
 
+  const children = parseCommentChildren(candidate.children);
+  if (children === null) {
+    return null;
+  }
+
   return {
     v: 1,
     id: candidate.id,
     text: candidate.text,
     author: candidate.author,
     ts: Math.floor(candidate.ts),
-    resolved: candidate.resolved
+    resolved: candidate.resolved,
+    children
   };
 }
 
@@ -131,4 +137,42 @@ function parseAndValidatePayload(rawPayload: string, startId: string): Comment |
     return null;
   }
   return validateParsedComment(parsed, startId);
+}
+
+function parseCommentChildren(input: unknown): CommentChild[] | null {
+  if (input === undefined) {
+    return [];
+  }
+  if (!Array.isArray(input)) {
+    return null;
+  }
+
+  const children: CommentChild[] = [];
+  for (const item of input) {
+    if (typeof item !== "object" || item === null) {
+      return null;
+    }
+    const child = item as Record<string, unknown>;
+    if (typeof child.id !== "string" || !COMMENT_ID_REGEX.test(child.id)) {
+      return null;
+    }
+    if (typeof child.text !== "string") {
+      return null;
+    }
+    if (typeof child.author !== "string") {
+      return null;
+    }
+    if (typeof child.ts !== "number" || !Number.isFinite(child.ts)) {
+      return null;
+    }
+
+    children.push({
+      id: child.id,
+      text: child.text,
+      author: child.author,
+      ts: Math.floor(child.ts)
+    });
+  }
+
+  return children;
 }

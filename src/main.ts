@@ -5,7 +5,7 @@ import { COMMENT_PANEL_VIEW_TYPE, CommentPanelView } from "./commentPanel";
 import { createCommentsEditorExtension } from "./editorExtension";
 import { createReadingModePostProcessor } from "./postProcessor";
 import { CommentsSettingTab } from "./settings";
-import { Comment, CommentsPluginSettings, DEFAULT_SETTINGS } from "./types";
+import { Comment, CommentChild, CommentsPluginSettings, DEFAULT_SETTINGS } from "./types";
 
 export default class CommentsPlugin extends Plugin {
   settings: CommentsPluginSettings = DEFAULT_SETTINGS;
@@ -148,19 +148,39 @@ export default class CommentsPlugin extends Plugin {
       return;
     }
 
-    const id = this.generateUniqueCommentId(editor.getValue());
-    const comment: Comment = {
-      v: 1,
-      id,
-      text: commentText,
-      author: this.resolveCommentAuthor(),
-      ts: Math.floor(Date.now() / 1000),
-      resolved: false
-    };
+    const comment = this.buildNewComment(commentText, editor.getValue());
 
     const markers = buildCommentMarkers(comment);
-    this.activeCommentId = id;
+    this.activeCommentId = comment.id;
     editor.replaceSelection(`${markers.startMarker}${selection}${markers.endMarker}`);
+    this.refreshPanel();
+  }
+
+  async replyToComment(parentCommentId: string): Promise<void> {
+    const target = this.findCommentInActiveEditor(parentCommentId);
+    if (!target) {
+      return;
+    }
+    if (target.child) {
+      new Notice("Replies can only be added to top-level comments.");
+      return;
+    }
+
+    const replyText = await this.askForComment({
+      title: "Reply to comment",
+      submitLabel: "Reply"
+    });
+    if (!replyText) {
+      return;
+    }
+
+    const reply = this.buildNewCommentChild(replyText, target.editor.getValue());
+    const updatedComment: Comment = {
+      ...target.match.comment,
+      children: [...target.match.comment.children, reply]
+    };
+    this.activeCommentId = reply.id;
+    this.replaceOffsets(target.editor, target.match.endMarkerFrom, target.match.endMarkerTo, serializeComment(updatedComment));
     this.refreshPanel();
   }
 
@@ -169,22 +189,26 @@ export default class CommentsPlugin extends Plugin {
     if (!target) {
       return;
     }
+    const author = target.child?.author ?? target.match.comment.author;
+    if (!this.canCurrentUserEditOrDelete(author)) {
+      new Notice("Only the comment author can edit this comment.");
+      return;
+    }
 
     this.noticeInvalidPairs(target.invalidPairs);
 
     const updatedText = await this.askForComment({
       title: "Edit comment",
-      initialValue: target.match.comment.text,
+      initialValue: target.child?.text ?? target.match.comment.text,
       submitLabel: "Save"
     });
     if (!updatedText) {
       return;
     }
 
-    const updatedComment: Comment = {
-      ...target.match.comment,
-      text: updatedText
-    };
+    const updatedComment = target.child
+      ? this.updateChildComment(target.match.comment, target.child.id, (child) => ({ ...child, text: updatedText }))
+      : { ...target.match.comment, text: updatedText };
     this.replaceOffsets(target.editor, target.match.endMarkerFrom, target.match.endMarkerTo, serializeComment(updatedComment));
     this.activeCommentId = commentId;
     this.refreshPanel();
@@ -193,6 +217,11 @@ export default class CommentsPlugin extends Plugin {
   resolveComment(commentId: string): void {
     const target = this.findCommentInActiveEditor(commentId);
     if (!target) {
+      return;
+    }
+
+    if (target.child) {
+      new Notice("Replies cannot be resolved.");
       return;
     }
 
@@ -212,8 +241,26 @@ export default class CommentsPlugin extends Plugin {
     if (!target) {
       return;
     }
+    const author = target.child?.author ?? target.match.comment.author;
+    if (!this.canCurrentUserEditOrDelete(author)) {
+      new Notice("Only the comment author can delete this comment.");
+      return;
+    }
 
     this.noticeInvalidPairs(target.invalidPairs);
+
+    if (target.child) {
+      const updatedComment: Comment = {
+        ...target.match.comment,
+        children: target.match.comment.children.filter((child) => child.id !== target.child!.id)
+      };
+      this.replaceOffsets(target.editor, target.match.endMarkerFrom, target.match.endMarkerTo, serializeComment(updatedComment));
+      if (this.activeCommentId === commentId) {
+        this.activeCommentId = target.match.comment.id;
+      }
+      this.refreshPanel();
+      return;
+    }
 
     // Remove in reverse order so earlier offsets remain valid.
     this.replaceOffsets(target.editor, target.match.endMarkerFrom, target.match.endMarkerTo, "");
@@ -230,7 +277,7 @@ export default class CommentsPlugin extends Plugin {
       return;
     }
     this.activeCommentId = commentId;
-    if (this.jumpToCommentInReadingMode(commentId)) {
+    if (this.jumpToCommentInReadingMode(target.match.comment.id)) {
       this.refreshPanel();
       return;
     }
@@ -303,7 +350,13 @@ export default class CommentsPlugin extends Plugin {
   }
 
   private generateUniqueCommentId(docText: string): string {
-    const existingIds = new Set(parseCommentsWithDiagnostics(docText).comments.map((item) => item.comment.id));
+    const existingIds = new Set<string>();
+    for (const item of parseCommentsWithDiagnostics(docText).comments) {
+      existingIds.add(item.comment.id);
+      for (const child of item.comment.children) {
+        existingIds.add(child.id);
+      }
+    }
     let id = generateCommentId();
     while (existingIds.has(id)) {
       id = generateCommentId();
@@ -311,9 +364,39 @@ export default class CommentsPlugin extends Plugin {
     return id;
   }
 
+  private buildNewComment(text: string, docText: string): Comment {
+    const comment: Comment = {
+      v: 1,
+      id: this.generateUniqueCommentId(docText),
+      text,
+      author: this.resolveCommentAuthor(),
+      ts: Math.floor(Date.now() / 1000),
+      resolved: false,
+      children: []
+    };
+    return comment;
+  }
+
+  private buildNewCommentChild(text: string, docText: string): CommentChild {
+    return {
+      id: this.generateUniqueCommentId(docText),
+      text,
+      author: this.resolveCommentAuthor(),
+      ts: Math.floor(Date.now() / 1000)
+    };
+  }
+
+  private updateChildComment(comment: Comment, childId: string, updater: (child: CommentChild) => CommentChild): Comment {
+    return {
+      ...comment,
+      children: comment.children.map((child) => (child.id === childId ? updater(child) : child))
+    };
+  }
+
   private findCommentInActiveEditor(commentId: string): {
     editor: Editor;
     match: ReturnType<typeof parseCommentsWithDiagnostics>["comments"][number];
+    child: CommentChild | null;
     invalidPairs: number;
   } | null {
     const activeView = this.getActiveMarkdownView();
@@ -324,7 +407,8 @@ export default class CommentsPlugin extends Plugin {
 
     const editor = activeView.editor;
     const parsed = parseCommentsWithDiagnostics(editor.getValue());
-    const match = parsed.comments.find((entry) => entry.comment.id === commentId);
+    const target = this.findCommentTargetInParsed(parsed.comments, commentId);
+    const match = target?.match ?? null;
     if (!match) {
       new Notice("Comment not found in active note.");
       if (parsed.invalidPairs > 0) {
@@ -333,7 +417,12 @@ export default class CommentsPlugin extends Plugin {
       return null;
     }
 
-    return { editor, match, invalidPairs: parsed.invalidPairs };
+    return {
+      editor,
+      match,
+      child: target?.child ?? null,
+      invalidPairs: parsed.invalidPairs
+    };
   }
 
   private noticeInvalidPairs(invalidPairs: number): void {
@@ -403,6 +492,10 @@ export default class CommentsPlugin extends Plugin {
     return "Unknown";
   }
 
+  canCurrentUserEditOrDelete(commentAuthor: string): boolean {
+    return this.normalizeAuthorIdentity(this.resolveCommentAuthor()) === this.normalizeAuthorIdentity(commentAuthor);
+  }
+
   private getGitUserName(): string | null {
     const requireFn = (globalThis as { require?: (id: string) => unknown }).require;
     if (!requireFn) {
@@ -444,6 +537,32 @@ export default class CommentsPlugin extends Plugin {
     return typeof basePath === "string" && basePath.length > 0 ? basePath : undefined;
   }
 
+  private normalizeAuthorIdentity(author: string): string {
+    const normalized = author.trim();
+    return normalized.length > 0 ? normalized.toLowerCase() : "unknown";
+  }
+
+  private findCommentTargetInParsed(
+    parsedComments: ReturnType<typeof parseCommentsWithDiagnostics>["comments"],
+    commentId: string
+  ): {
+    match: ReturnType<typeof parseCommentsWithDiagnostics>["comments"][number];
+    child: CommentChild | null;
+  } | null {
+    for (const entry of parsedComments) {
+      if (entry.comment.id === commentId) {
+        return { match: entry, child: null };
+      }
+
+      const child = entry.comment.children.find((item) => item.id === commentId) ?? null;
+      if (child) {
+        return { match: entry, child };
+      }
+    }
+
+    return null;
+  }
+
   private jumpToCommentInReadingMode(commentId: string): boolean {
     const activeView = this.getActiveMarkdownView();
     if (!activeView || activeView.getMode() !== "preview") {
@@ -475,11 +594,16 @@ export default class CommentsPlugin extends Plugin {
       return;
     }
 
+    const parsed = parseCommentsWithDiagnostics(activeView.editor.getValue()).comments;
+    const activeThreadId = this.activeCommentId
+      ? (this.findCommentTargetInParsed(parsed, this.activeCommentId)?.match.comment.id ?? null)
+      : null;
+
     const highlightEls = activeView.previewMode.containerEl.querySelectorAll<HTMLElement>(
       ".marginalia-highlight[data-marginalia-id]"
     );
     highlightEls.forEach((highlightEl) => {
-      const isActive = this.activeCommentId !== null && highlightEl.dataset.marginaliaId === this.activeCommentId;
+      const isActive = activeThreadId !== null && highlightEl.dataset.marginaliaId === activeThreadId;
       highlightEl.classList.toggle("marginalia-highlight-active", isActive);
     });
   }

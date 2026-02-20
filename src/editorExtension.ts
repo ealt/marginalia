@@ -68,7 +68,8 @@ function buildDecorations(docText: string, activeCommentId: string | null): Deco
   const builder = new RangeSetBuilder<Decoration>();
 
   for (const parsed of comments) {
-    const isActive = parsed.comment.id === activeCommentId;
+    const isActive = parsed.comment.id === activeCommentId
+      || parsed.comment.children.some((child) => child.id === activeCommentId);
     builder.add(parsed.startMarkerFrom, parsed.startMarkerTo, Decoration.replace({}));
 
     if (parsed.annotatedFrom < parsed.annotatedTo) {

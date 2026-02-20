@@ -46,7 +46,11 @@ export function createReadingModePostProcessor(plugin: CommentsPlugin): Markdown
         snapshot.spans,
         matchIndex,
         matchIndex + annotatedText.length,
-        buildReadingHighlightClass(parsed.comment.resolved, parsed.comment.id === plugin.activeCommentId),
+        buildReadingHighlightClass(
+          parsed.comment.resolved,
+          parsed.comment.id === plugin.activeCommentId
+            || parsed.comment.children.some((child) => child.id === plugin.activeCommentId)
+        ),
         parsed.comment.id,
         (commentId) => {
           plugin.selectCommentFromDocument(commentId);

@@ -1,3 +1,10 @@
+export interface CommentChild {
+  id: string;
+  text: string;
+  author: string;
+  ts: number;
+}
+
 export interface Comment {
   v: 1;
   id: string;
@@ -5,6 +12,7 @@ export interface Comment {
   author: string;
   ts: number;
   resolved: boolean;
+  children: CommentChild[];
 }
 
 export interface CommentWithPosition {

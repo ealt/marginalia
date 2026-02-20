@@ -22,6 +22,7 @@ Patch release.
 - Make selected highlight emphasis and jump-to-comment behavior work in reading mode as well
 - Allow clicking highlighted text in the document to select and focus the matching comment in the side panel
 - Restrict comment edit/delete actions so only the original author can perform them, and hide those actions for other users in the panel
+- Add reply chains with parent-child threading, collapsed child visibility until a thread is selected, and child comments that cannot be replied to or resolved
 
 ## 0.1.0
 
