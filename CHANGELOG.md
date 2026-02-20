@@ -21,6 +21,7 @@ Patch release.
 - Fix selected-highlight sync so the emphasized editor highlight follows the newly selected comment immediately
 - Make selected highlight emphasis and jump-to-comment behavior work in reading mode as well
 - Allow clicking highlighted text in the document to select and focus the matching comment in the side panel
+- Restrict comment edit/delete actions so only the original author can perform them, and hide those actions for other users in the panel
 
 ## 0.1.0
 

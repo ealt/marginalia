@@ -96,12 +96,15 @@ export class CommentPanelView extends ItemView {
       });
 
       const actions = card.createDiv({ cls: "marginalia-card-actions" });
+      const canModify = this.plugin.canCurrentUserEditOrDelete(parsed.comment.author);
 
-      const editButton = actions.createEl("button", { text: "Edit" });
-      editButton.addEventListener("click", (event) => {
-        event.stopPropagation();
-        void this.plugin.editComment(parsed.comment.id);
-      });
+      if (canModify) {
+        const editButton = actions.createEl("button", { text: "Edit" });
+        editButton.addEventListener("click", (event) => {
+          event.stopPropagation();
+          void this.plugin.editComment(parsed.comment.id);
+        });
+      }
 
       const resolveButton = actions.createEl("button", { text: parsed.comment.resolved ? "Unresolve" : "Resolve" });
       resolveButton.addEventListener("click", (event) => {
@@ -109,11 +112,13 @@ export class CommentPanelView extends ItemView {
         this.plugin.resolveComment(parsed.comment.id);
       });
 
-      const deleteButton = actions.createEl("button", { text: "Delete" });
-      deleteButton.addEventListener("click", (event) => {
-        event.stopPropagation();
-        this.plugin.deleteComment(parsed.comment.id);
-      });
+      if (canModify) {
+        const deleteButton = actions.createEl("button", { text: "Delete" });
+        deleteButton.addEventListener("click", (event) => {
+          event.stopPropagation();
+          this.plugin.deleteComment(parsed.comment.id);
+        });
+      }
     }
 
     const selectedCard = root.querySelector<HTMLElement>(".marginalia-card.is-selected");
