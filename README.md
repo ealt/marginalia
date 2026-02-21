@@ -48,9 +48,33 @@ escaped to prevent breaking the outer comment boundary.
 
 ## Installation
 
-### From Obsidian Community Plugins
+### From Obsidian Community Plugins ([*pending approval*](https://github.com/obsidianmd/obsidian-releases/pull/10357))
 
-*Coming soon* -- search for "Marginalia" in Settings > Community plugins.
+Search for "Marginalia" in Settings > Community plugins.
+
+### One-liner (recommended)
+
+Run from anywhere — no download needed. Omit the path to be prompted, or
+use `.` when already in your vault directory.
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/ericalt/marginalia/main/scripts/install-marginalia.sh | bash -s -- /path/to/YourVault
+```
+
+Examples:
+- `... | bash` — prompts for vault path
+- `... | bash -s -- .` — install into current directory (if you’re in the vault)
+- `... | bash -s -- ~/Documents/MyVault --force` — overwrite without prompting
+
+### Local script / npm
+
+If you already have the repo cloned:
+
+```bash
+bash scripts/install-marginalia.sh /path/to/YourVault
+# or
+npm run install:plugin -- /path/to/YourVault
+```
 
 ### Manual
 
@@ -59,21 +83,6 @@ escaped to prevent breaking the outer comment boundary.
 2. Create `.obsidian/plugins/marginalia/` in your vault
 3. Copy the three files into that directory
 4. Enable the plugin in Settings > Community plugins
-
-### Scripted install
-
-```bash
-bash scripts/install-marginalia.sh /path/to/YourVault
-```
-
-If you omit the vault path, the script prompts you to enter one. Use
-`--force` to overwrite existing plugin files or `--help` for full usage.
-
-You can also run it via npm:
-
-```bash
-npm run install:plugin -- /path/to/YourVault
-```
 
 ## Development
 
