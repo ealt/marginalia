@@ -1,4 +1,4 @@
-import { Comment, CommentChild, CommentWithPosition, ParseCommentsResult } from "./types";
+import type { Comment, CommentChild, CommentWithPosition, ParseCommentsResult } from "./types.ts";
 
 const COMMENT_PAIR_REGEX =
   /(<!--\s*marginalia-start:\s*([a-zA-Z0-9_-]+)\s*-->)([\s\S]*?)(<!--\s*marginalia:\s*([\s\S]*?)\s*-->)/g;

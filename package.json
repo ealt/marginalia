@@ -9,6 +9,8 @@
     "check": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "interop:export": "node --no-warnings --experimental-strip-types scripts/export-criticmarkup.mjs",
+    "interop:import": "node --no-warnings --experimental-strip-types scripts/import-criticmarkup.mjs",
     "install:plugin": "bash scripts/install-marginalia.sh",
     "lint:plugin": "node ~/Documents/toolchain/scripts/obsidian-plugin-lint.mjs",
     "version-bump": "node ~/Documents/toolchain/scripts/obsidian-version-bump.mjs"

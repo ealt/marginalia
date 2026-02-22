@@ -2,6 +2,28 @@
 
 All notable changes to Marginalia are documented here.
 
+## Unreleased
+
+- Add CriticMarkup interoperability:
+  - Export Marginalia comments to CriticMarkup tokens, including child replies
+    (`{==text==}{>>parent<<}{>>child<<}`)
+  - Import CriticMarkup back into Marginalia markers with sidecar-assisted
+    metadata restoration
+  - Import standalone CriticMarkup comments (`{>>comment<<}`) as zero-length
+    Marginalia anchors
+- Add sidecar metadata files (`.critmeta.json`) to preserve and remap
+  `id`/`author`/`ts`/`resolved`/`children` during round-trips
+- Add command-palette commands:
+  - `Export active note to CriticMarkup`
+  - `Import active note from CriticMarkup`
+- Add CLI commands:
+  - `npm run interop:export -- path/to/note.md`
+  - `npm run interop:import -- path/to/note.md`
+- Add interop test coverage for range threads, standalone comments, sidecar
+  mapping, and malformed token diagnostics
+- Update agent instructions to require changelog updates for user-visible
+  changes
+
 ## 0.2.1
 
 Patch release.

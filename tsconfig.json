@@ -6,6 +6,7 @@
     "module": "ESNext",
     "target": "ES2018",
     "moduleResolution": "Bundler",
+    "allowImportingTsExtensions": true,
     "strict": true,
     "strictNullChecks": true,
     "noImplicitAny": true,

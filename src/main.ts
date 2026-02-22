@@ -2,10 +2,12 @@ import { Editor, MarkdownView, Notice, Plugin, WorkspaceLeaf } from "obsidian";
 import { buildCommentMarkers, generateCommentId, parseCommentsWithDiagnostics, serializeComment } from "./commentParser";
 import { CommentModalOptions, promptForComment } from "./commentModal";
 import { COMMENT_PANEL_VIEW_TYPE, CommentPanelView } from "./commentPanel";
+import { exportMarginaliaToCritic, importCriticToMarginalia, parseCriticSidecar } from "./criticMarkupInterop";
 import { createCommentsEditorExtension } from "./editorExtension";
 import { createReadingModePostProcessor } from "./postProcessor";
 import { CommentsSettingTab } from "./settings";
 import { Comment, CommentChild, CommentsPluginSettings, DEFAULT_SETTINGS } from "./types";
+import type { CriticSidecar } from "./criticMarkupInterop";
 
 export default class CommentsPlugin extends Plugin {
   settings: CommentsPluginSettings = DEFAULT_SETTINGS;
@@ -44,6 +46,22 @@ export default class CommentsPlugin extends Plugin {
       name: "Toggle comments panel",
       callback: () => {
         void this.togglePanel();
+      }
+    });
+
+    this.addCommand({
+      id: "export-active-note-to-criticmarkup",
+      name: "Export active note to CriticMarkup",
+      callback: () => {
+        void this.exportActiveNoteToCriticMarkup();
+      }
+    });
+
+    this.addCommand({
+      id: "import-active-note-from-criticmarkup",
+      name: "Import active note from CriticMarkup",
+      callback: () => {
+        void this.importActiveNoteFromCriticMarkup();
       }
     });
 
@@ -331,6 +349,75 @@ body {
     this.refreshPanel();
   }
 
+  private async exportActiveNoteToCriticMarkup(): Promise<void> {
+    const activeView = this.getActiveMarkdownView();
+    if (!activeView || !activeView.file) {
+      new Notice("Open a markdown note to export.");
+      return;
+    }
+
+    const sourceText = activeView.editor.getValue();
+    const exported = exportMarginaliaToCritic(sourceText);
+    activeView.editor.setValue(exported.text);
+
+    const sidecarPath = this.getCriticSidecarPath(activeView.file.path);
+    const adapter = this.app.vault.adapter as {
+      write: (path: string, data: string) => Promise<void>;
+    };
+    await adapter.write(sidecarPath, JSON.stringify(exported.sidecar, null, 2));
+
+    new Notice(
+      `Exported ${exported.diagnostics.exportedRangeThreads + exported.diagnostics.exportedPointThreads} thread(s) to CriticMarkup.`
+    );
+    if (exported.diagnostics.malformedMarginaliaPairs > 0) {
+      this.noticeInvalidPairs(exported.diagnostics.malformedMarginaliaPairs);
+    }
+    this.refreshPanel();
+  }
+
+  private async importActiveNoteFromCriticMarkup(): Promise<void> {
+    const activeView = this.getActiveMarkdownView();
+    if (!activeView || !activeView.file) {
+      new Notice("Open a markdown note to import.");
+      return;
+    }
+
+    const sidecarPath = this.getCriticSidecarPath(activeView.file.path);
+    const adapter = this.app.vault.adapter as {
+      exists?: (path: string) => Promise<boolean>;
+      read: (path: string) => Promise<string>;
+    };
+
+    let sidecar: CriticSidecar | null = null;
+    try {
+      const hasSidecar = typeof adapter.exists === "function"
+        ? await adapter.exists(sidecarPath)
+        : false;
+      if (hasSidecar) {
+        const raw = await adapter.read(sidecarPath);
+        const parsed = parseCriticSidecar(JSON.parse(raw));
+        if (parsed) {
+          sidecar = parsed;
+        } else {
+          new Notice("Critic sidecar was invalid JSON shape; importing without metadata.");
+        }
+      }
+    } catch {
+      new Notice("Unable to read Critic sidecar; importing without metadata.");
+    }
+
+    const sourceText = activeView.editor.getValue();
+    const imported = importCriticToMarginalia(sourceText, sidecar);
+    activeView.editor.setValue(imported.text);
+
+    const importedThreads = imported.diagnostics.importedRangeThreads + imported.diagnostics.importedPointThreads;
+    const sidecarSummary = imported.diagnostics.matchedSidecarRecords > 0
+      ? ` (${imported.diagnostics.matchedSidecarRecords} metadata match${imported.diagnostics.matchedSidecarRecords === 1 ? "" : "es"})`
+      : "";
+    new Notice(`Imported ${importedThreads} CriticMarkup thread(s)${sidecarSummary}.`);
+    this.refreshPanel();
+  }
+
   refreshPanel(): void {
     for (const leaf of this.app.workspace.getLeavesOfType(COMMENT_PANEL_VIEW_TYPE)) {
       const view = leaf.view;
@@ -355,6 +442,14 @@ body {
     const from = editor.offsetToPos(fromOffset);
     const to = editor.offsetToPos(toOffset);
     editor.replaceRange(replacement, from, to);
+  }
+
+  private getCriticSidecarPath(notePath: string): string {
+    const lowerPath = notePath.toLowerCase();
+    if (lowerPath.endsWith(".md")) {
+      return `${notePath.slice(0, -3)}.critmeta.json`;
+    }
+    return `${notePath}.critmeta.json`;
   }
 
   private generateUniqueCommentId(docText: string): string {

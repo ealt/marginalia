@@ -23,6 +23,9 @@ and resolution tracking -- all stored invisibly in standard markdown.
   colors, reading mode toggle
 - **Portable** -- comments are stored as HTML comment markers, invisible to any
   renderer outside Obsidian
+- **CriticMarkup interop** -- convert active notes (or files via CLI) to/from
+  CriticMarkup with sidecar metadata for round-tripping author/timestamp/reply
+  data
 
 ## Disclosures
 
@@ -96,7 +99,50 @@ npm run dev         # watch mode
 npm run build       # production bundle
 npm run check       # type-check
 npm run test        # unit tests
+npm run interop:export -- path/to/note.md   # convert Marginalia -> CriticMarkup
+npm run interop:import -- path/to/note.md   # convert CriticMarkup -> Marginalia
 ```
+
+## CriticMarkup interoperability
+
+Marginalia includes bidirectional conversion between plugin markers and
+CriticMarkup.
+
+### Command palette (active note)
+
+- `Export active note to CriticMarkup`
+- `Import active note from CriticMarkup`
+
+### CLI workflow
+
+```bash
+npm run interop:export -- path/to/note.md
+npm run interop:import -- path/to/note.md
+```
+
+Both commands use a sibling sidecar file (`note.critmeta.json`) to preserve
+Marginalia-only metadata (`id`, `author`, `ts`, `resolved`, `children`) and map
+records back during import.
+
+Export shape:
+
+```md
+{==annotated text==}{>>parent comment<<}{>>first child<<}{>>second child<<}
+```
+
+Standalone CriticMarkup comments are also imported:
+
+```md
+{>>comment without highlight<<}
+```
+
+Those become zero-length Marginalia anchors and export back as standalone
+CriticMarkup comment tokens.
+
+### Rendering caveat
+
+In markdown renderers without CriticMarkup support, CriticMarkup tokens are
+shown as literal text (`{==...==}`, `{>>...<<}`, etc.).
 
 ### Local Obsidian testing
 

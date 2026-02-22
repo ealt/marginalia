@@ -20,6 +20,8 @@ npm run dev             # Watch mode with inline sourcemaps
 npm run check           # TypeScript type-check (tsc --noEmit)
 npm run test            # Unit tests (Vitest)
 npm run test:watch      # Tests in watch mode
+npm run interop:export -- path/to/note.md  # Convert Marginalia markers to CriticMarkup + sidecar
+npm run interop:import -- path/to/note.md  # Convert CriticMarkup (+ sidecar) to Marginalia markers
 npm run lint:plugin     # Obsidian community plugin lint
 npm run version-bump -- patch  # Bump version (also: minor, major, or x.y.z)
 ```
@@ -40,13 +42,15 @@ src/
 ├── main.ts            — Plugin entry, commands, comment/reply CRUD
 ├── types.ts           — Comment, CommentChild, CommentWithPosition, settings
 ├── commentParser.ts   — Pure parsing/serialization (no Obsidian deps)
+├── criticMarkupInterop.ts — Pure CriticMarkup ↔ Marginalia conversion + sidecar mapping
 ├── editorExtension.ts — CM6 ViewPlugin: highlights, marker hiding, icon widget
 ├── commentPanel.ts    — Sidebar ItemView with threaded comments + inline reply field
 ├── commentModal.ts    — Modal for add/edit comment text
 ├── postProcessor.ts   — Reading mode highlighting via DOM TreeWalker
 └── settings.ts        — Settings tab: author, colors, reading mode toggle
 tests/
-└── commentParser.test.ts — Parser unit tests
+├── commentParser.test.ts — Parser unit tests
+└── criticMarkupInterop.test.ts — Interop unit tests (range + standalone comments, sidecar mapping)
 ```
 
 Release artifacts: `main.js`, `manifest.json`, `styles.css`, `versions.json`
@@ -60,8 +64,10 @@ Release artifacts: `main.js`, `manifest.json`, `styles.css`, `versions.json`
   `activeCommentId` for panel + highlight syncing.
 - **`commentParser.ts`** — Pure functions. Regex-based parsing of paired
   markers, JSON serialization with `-->` escape (`--\u003e`), ID generation,
-  strict validation (including `children` reply payloads). Only module with unit
-  tests.
+  strict validation (including `children` reply payloads).
+- **`criticMarkupInterop.ts`** — Pure functions for Marginalia ↔ CriticMarkup
+  conversion. Exports parent/child threads as CriticMarkup tokens and stores
+  round-trip metadata in a sidecar schema consumed by imports.
 - **`editorExtension.ts`** — CodeMirror 6 `ViewPlugin`. Re-parses on every
   `docChanged`, creates three decorations per comment: replace (hide start
   marker), mark (highlight text), replace with `CommentIconWidget` (end marker →
@@ -104,6 +110,8 @@ stored as separate marker pairs.
   experience.
 - Clicking highlighted text in editor/reading mode should select/focus matching
   panel thread.
+- Always update `CHANGELOG.md` for user-visible behavior changes in the same
+  PR/commit set.
 
 ## Coding Style
 
@@ -117,10 +125,11 @@ stored as separate marker pairs.
 
 ## Testing
 
-Tests live in `tests/` and use Vitest. Currently only `commentParser.ts` has
-unit tests covering parsing, serialization, escaping, validation, and ID
-generation. The parser module is pure functions with no Obsidian dependencies,
-making it directly testable.
+Tests live in `tests/` and use Vitest. Current coverage includes
+`commentParser.ts` (parsing/serialization/validation) and
+`criticMarkupInterop.ts` (CriticMarkup round-trip mapping and sidecar handling).
+Both modules are pure functions with no Obsidian dependencies, making them
+directly testable.
 
 - Use clear `describe`/`it` names that state behavior and edge cases.
 - Add tests for parser/serialization changes and malformed marker handling.
