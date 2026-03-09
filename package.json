@@ -1,6 +1,6 @@
 {
   "name": "obsidian-marginalia",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Add inline comments to any document. Select text, leave a comment, and collaborate with highlights, a sidebar panel, and resolution tracking — all stored invisibly in standard markdown.",
   "main": "main.js",
   "scripts": {
@@ -12,6 +12,7 @@
     "interop:export": "node --no-warnings --experimental-strip-types scripts/export-criticmarkup.mjs",
     "interop:import": "node --no-warnings --experimental-strip-types scripts/import-criticmarkup.mjs",
     "install:plugin": "bash scripts/install-marginalia.sh",
+    "lint": "eslint src/",
     "lint:plugin": "node ~/Documents/toolchain/scripts/obsidian-plugin-lint.mjs",
     "version-bump": "node ~/Documents/toolchain/scripts/obsidian-version-bump.mjs"
   },
@@ -19,8 +20,11 @@
     "@codemirror/state": "6.5.0",
     "@codemirror/view": "6.38.6",
     "@types/node": "^24.3.0",
+    "@typescript-eslint/parser": "^8.56.1",
     "builtin-modules": "^4.0.0",
     "esbuild": "^0.25.9",
+    "eslint": "^9.39.4",
+    "eslint-plugin-obsidianmd": "^0.1.9",
     "obsidian": "latest",
     "typescript": "^5.9.2",
     "vitest": "^4.0.18"

@@ -18,6 +18,7 @@ npm install             # Install dependencies (Node.js 22+, npm 10+)
 npm run build           # Production bundle → main.js
 npm run dev             # Watch mode with inline sourcemaps
 npm run check           # TypeScript type-check (tsc --noEmit)
+npm run lint            # ESLint with eslint-plugin-obsidianmd
 npm run test            # Unit tests (Vitest)
 npm run test:watch      # Tests in watch mode
 npm run interop:export -- path/to/note.md  # Convert Marginalia markers to CriticMarkup + sidecar
@@ -28,7 +29,7 @@ npm run version-bump -- patch  # Bump version (also: minor, major, or x.y.z)
 
 Run a single test file: `npx vitest run tests/commentParser.test.ts`
 
-Pre-PR validation: `npm run check && npm run test && npm run build`
+Pre-PR validation: `npm run check && npm run lint && npm run test && npm run build`
 
 ## Architecture
 

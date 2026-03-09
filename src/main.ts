@@ -13,7 +13,7 @@ export default class CommentsPlugin extends Plugin {
   settings: CommentsPluginSettings = DEFAULT_SETTINGS;
   activeCommentId: string | null = null;
   private lastMarkdownLeaf: WorkspaceLeaf | null = null;
-  private dynamicStyleEl: HTMLStyleElement | null = null;
+  private dynamicStyleRegistered = false;
 
   async onload(): Promise<void> {
     await this.loadSettings();
@@ -51,7 +51,7 @@ export default class CommentsPlugin extends Plugin {
 
     this.addCommand({
       id: "export-active-note-to-criticmarkup",
-      name: "Export active note to CriticMarkup",
+      name: "Export active note to criticmarkup",
       callback: () => {
         void this.exportActiveNoteToCriticMarkup();
       }
@@ -59,7 +59,7 @@ export default class CommentsPlugin extends Plugin {
 
     this.addCommand({
       id: "import-active-note-from-criticmarkup",
-      name: "Import active note from CriticMarkup",
+      name: "Import active note from criticmarkup",
       callback: () => {
         void this.importActiveNoteFromCriticMarkup();
       }
@@ -123,8 +123,8 @@ export default class CommentsPlugin extends Plugin {
   }
 
   async loadSettings(): Promise<void> {
-    const loaded = await this.loadData();
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, loaded);
+    const loaded = (await this.loadData()) as Partial<CommentsPluginSettings> | null;
+    this.settings = { ...DEFAULT_SETTINGS, ...loaded };
   }
 
   async saveSettings(): Promise<void> {
@@ -134,24 +134,23 @@ export default class CommentsPlugin extends Plugin {
   }
 
   updateHighlightStyles(): void {
-    const styleText = `
-body {
-  --marginalia-highlight-color: ${this.toAlphaColor(this.settings.highlightColor, 0.18)};
-  --marginalia-highlight-color-resolved: ${this.toAlphaColor(this.settings.resolvedHighlightColor, 0.12)};
-  --marginalia-highlight-color-active: ${this.toAlphaColor(this.settings.highlightColor, 0.42)};
-  --marginalia-highlight-color-resolved-active: ${this.toAlphaColor(this.settings.resolvedHighlightColor, 0.28)};
-}
-`;
-    if (!this.dynamicStyleEl) {
-      this.dynamicStyleEl = document.createElement("style");
-      this.dynamicStyleEl.id = "marginalia-dynamic-colors";
-      document.head.appendChild(this.dynamicStyleEl);
+    const props: Record<string, string> = {
+      "--marginalia-highlight-color": this.toAlphaColor(this.settings.highlightColor, 0.18),
+      "--marginalia-highlight-color-resolved": this.toAlphaColor(this.settings.resolvedHighlightColor, 0.12),
+      "--marginalia-highlight-color-active": this.toAlphaColor(this.settings.highlightColor, 0.42),
+      "--marginalia-highlight-color-resolved-active": this.toAlphaColor(this.settings.resolvedHighlightColor, 0.28),
+    };
+    for (const [key, value] of Object.entries(props)) {
+      document.body.style.setProperty(key, value);
+    }
+    if (!this.dynamicStyleRegistered) {
+      this.dynamicStyleRegistered = true;
       this.register(() => {
-        this.dynamicStyleEl?.remove();
-        this.dynamicStyleEl = null;
+        for (const key of Object.keys(props)) {
+          document.body.style.removeProperty(key);
+        }
       });
     }
-    this.dynamicStyleEl.textContent = styleText;
   }
 
   async addComment(editor: Editor): Promise<void> {
@@ -345,14 +344,14 @@ body {
     if (leaves.length === 0) {
       await leaf.setViewState({ type: COMMENT_PANEL_VIEW_TYPE, active: true });
     }
-    this.app.workspace.revealLeaf(leaf);
+    await this.app.workspace.revealLeaf(leaf);
     this.refreshPanel();
   }
 
   private async exportActiveNoteToCriticMarkup(): Promise<void> {
     const activeView = this.getActiveMarkdownView();
     if (!activeView || !activeView.file) {
-      new Notice("Open a markdown note to export.");
+      new Notice("Open a Markdown note to export.");
       return;
     }
 
@@ -378,7 +377,7 @@ body {
   private async importActiveNoteFromCriticMarkup(): Promise<void> {
     const activeView = this.getActiveMarkdownView();
     if (!activeView || !activeView.file) {
-      new Notice("Open a markdown note to import.");
+      new Notice("Open a Markdown note to import.");
       return;
     }
 
@@ -403,7 +402,7 @@ body {
         }
       }
     } catch {
-      new Notice("Unable to read Critic sidecar; importing without metadata.");
+      new Notice("Unable to read critic sidecar; importing without metadata.");
     }
 
     const sourceText = activeView.editor.getValue();
@@ -504,7 +503,7 @@ body {
   } | null {
     const activeView = this.getActiveMarkdownView();
     if (!activeView) {
-      new Notice("Open a markdown editor first.");
+      new Notice("Open a Markdown editor first.");
       return null;
     }
 
