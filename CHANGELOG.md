@@ -24,6 +24,19 @@ All notable changes to Marginalia are documented here.
 - Update agent instructions to require changelog updates for user-visible
   changes
 
+## 0.2.2
+
+Patch release — address Obsidian community plugin review feedback.
+
+- Replace dynamic `<style>` element with `document.body.style.setProperty()`
+  for highlight color overrides
+- Fix floating promise from `revealLeaf` in comments panel toggle
+- Remove unnecessary `async` from `onOpen`/`onClose` in comment panel view
+- Fix sentence case in command names, notices, and settings descriptions
+- Remove unused variable in CriticMarkup import logic
+- Add `eslint-plugin-obsidianmd` with recommended config for ongoing
+  compliance
+
 ## 0.2.1
 
 Patch release.
