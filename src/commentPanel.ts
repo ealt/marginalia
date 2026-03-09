@@ -25,12 +25,14 @@ export class CommentPanelView extends ItemView {
     return "message-square";
   }
 
-  async onOpen(): Promise<void> {
+  onOpen(): Promise<void> {
     this.redraw();
+    return Promise.resolve();
   }
 
-  async onClose(): Promise<void> {
+  onClose(): Promise<void> {
     this.contentEl.empty();
+    return Promise.resolve();
   }
 
   redraw(): void {

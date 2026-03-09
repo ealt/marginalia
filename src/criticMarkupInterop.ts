@@ -224,12 +224,6 @@ export function importCriticToMarginalia(docText: string, sidecar: CriticSidecar
           const tokenComments = run.comments
             .slice(runOffset, runOffset + chosenLength)
             .map(decodeCriticTokenText);
-          const candidate: ThreadCandidate = {
-            anchorType: "point",
-            order,
-            annotatedText: "",
-            tokenComments
-          };
           if (chosenMatch) {
             matcher.usedRecordIndexes.add(chosenMatch.recordIndex);
           }
