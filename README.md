@@ -61,7 +61,7 @@ Run from anywhere — no download needed. Omit the path to be prompted, or
 use `.` when already in your vault directory.
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/ericalt/marginalia/main/scripts/install-marginalia.sh | bash -s -- /path/to/YourVault
+curl -fsSL https://raw.githubusercontent.com/ealt/marginalia/main/scripts/install-marginalia.sh | bash -s -- /path/to/YourVault
 ```
 
 Examples:
@@ -82,7 +82,7 @@ npm run install:plugin -- /path/to/YourVault
 ### Manual
 
 1. Download `main.js`, `manifest.json`, and `styles.css` from the
-   [latest release](https://github.com/ericalt/marginalia/releases/latest)
+   [latest release](https://github.com/ealt/marginalia/releases/latest)
 2. Create `.obsidian/plugins/marginalia/` in your vault
 3. Copy the three files into that directory
 4. Enable the plugin in Settings > Community plugins
